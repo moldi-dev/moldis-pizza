@@ -2,6 +2,7 @@ package org.moldidev.moldispizza.service;
 
 import org.moldidev.moldispizza.entity.User;
 import org.moldidev.moldispizza.repository.UserRepository;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,13 @@ public class UserService {
     }
 
     public User addUser(User user) {
+        String plainPassword = user.getPassword();
+
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String encryptedPassword = passwordEncoder.encode(plainPassword);
+
+        user.setPassword(encryptedPassword);
+
         return userRepository.save(user);
     }
 
@@ -38,6 +46,7 @@ public class UserService {
 
         if (foundUser.isPresent()) {
             User updatedUser = foundUser.get();
+
             updatedUser.setUsername(newUser.getUsername());
             updatedUser.setPassword(newUser.getPassword());
             updatedUser.setRole(newUser.getRole());
@@ -53,6 +62,7 @@ public class UserService {
 
         if (foundUser.isPresent()) {
             User updatedUser = foundUser.get();
+
             updatedUser.setUsername(newUser.getUsername());
             updatedUser.setPassword(newUser.getPassword());
             updatedUser.setRole(newUser.getRole());

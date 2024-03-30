@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.lang.NonNull;
 
+import java.util.List;
+
 @Entity
 @Builder
 @NoArgsConstructor
@@ -17,6 +19,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
+
+    @OneToMany
+    private List<Order> orderList;
 
     @Column(name = "username", columnDefinition = "varchar(50) unique not null")
     @NonNull
