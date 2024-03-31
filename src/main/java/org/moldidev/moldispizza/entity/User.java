@@ -49,4 +49,8 @@ public class User {
 
     @Column(name = "role", columnDefinition = "varchar(20) default 'CUSTOMER'")
     private String role = "CUSTOMER";
+
+    public void addOrder(Order order) {
+        this.orderList.add(order);
+    }
 }

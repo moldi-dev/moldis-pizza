@@ -4,13 +4,12 @@ import org.moldidev.moldispizza.entity.Pizza;
 import org.moldidev.moldispizza.service.PizzaService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
-@Controller
+@RestController
 public class PizzaController {
 
     private final PizzaService pizzaService;

@@ -2,7 +2,6 @@ package org.moldidev.moldispizza.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.antlr.v4.runtime.misc.Pair;
 
 import java.util.List;
 
@@ -24,4 +23,8 @@ public class Basket {
 
     @OneToMany
     private List<Pizza> pizzaList;
+
+    public void addPizza(Pizza pizza) {
+        this.pizzaList.add(pizza);
+    }
 }
