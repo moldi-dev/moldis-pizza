@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Getter
@@ -21,12 +22,12 @@ public class Order {
     @ManyToOne
     private User user;
 
-    @OneToOne
-    private Basket basket;
+    @ManyToMany
+    private List<Pizza> pizzaList;
 
-    @Column(name = "price")
+    @Column(name = "total_price")
     private double price;
 
-    @Column(name = "date")
+    @Column(name = "created_at")
     private Date date = java.sql.Date.valueOf(LocalDate.now());
 }

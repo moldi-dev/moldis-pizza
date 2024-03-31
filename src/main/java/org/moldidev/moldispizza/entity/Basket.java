@@ -18,10 +18,10 @@ public class Basket {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @ManyToOne
     private User user;
 
-    @OneToMany
+    @ManyToMany
     private List<Pizza> pizzaList;
 
     public void addPizza(Pizza pizza) {

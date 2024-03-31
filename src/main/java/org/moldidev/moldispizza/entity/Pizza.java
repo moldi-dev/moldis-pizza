@@ -16,18 +16,14 @@ public class Pizza {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
-    @Column(name = "name", columnDefinition = "varchar(100) not null")
-    @NonNull
+    @Column(name = "name", columnDefinition = "varchar(100) unique not null")
     private String name;
 
     @Column(name = "ingredients", columnDefinition = "text not null")
-    @NonNull
     private String ingredients;
 
     @Column(name = "price", columnDefinition = "double precision not null check(price > 0)")
-    @NonNull
     private double price;
 }

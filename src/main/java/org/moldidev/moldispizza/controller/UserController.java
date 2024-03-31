@@ -1,21 +1,25 @@
 package org.moldidev.moldispizza.controller;
 
+import org.moldidev.moldispizza.entity.Basket;
 import org.moldidev.moldispizza.entity.User;
+import org.moldidev.moldispizza.service.BasketService;
 import org.moldidev.moldispizza.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 public class UserController {
-
     private final UserService userService;
+    private final BasketService basketService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, BasketService basketService) {
         this.userService = userService;
+        this.basketService = basketService;
     }
 
     @GetMapping("/getAllUsers")
@@ -48,6 +52,10 @@ public class UserController {
     @PostMapping("/addUser")
     public ResponseEntity<User> addUser(@RequestBody User user) {
         User createdUser = userService.addUser(user);
+        Basket createdBasket = Basket.builder().user(user).pizzaList(new ArrayList<>()).build();
+
+        basketService.addBasket(createdBasket);
+
         return new ResponseEntity<>(createdUser, HttpStatus.OK);
     }
 
