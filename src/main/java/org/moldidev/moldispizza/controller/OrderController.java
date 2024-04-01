@@ -1,5 +1,6 @@
 package org.moldidev.moldispizza.controller;
 
+import org.moldidev.moldispizza.dto.OrderDTO;
 import org.moldidev.moldispizza.entity.Order;
 import org.moldidev.moldispizza.service.OrderService;
 import org.springframework.http.HttpStatus;
@@ -18,32 +19,32 @@ public class OrderController {
     }
 
     @GetMapping("/getAllOrders")
-    public ResponseEntity<List<Order>> getAllOrders() {
+    public ResponseEntity<List<OrderDTO>> getAllOrders() {
         return ResponseEntity.ok(orderService.getAllOrders());
     }
 
     @GetMapping("/getOrderById/{id}")
-    public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
+    public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long id) {
         return ResponseEntity.ok(orderService.getOrderById(id));
     }
 
     @GetMapping("/getAllOrdersByUserId/{userId}")
-    public ResponseEntity<List<Order>> getAllOrdersByUserId(@PathVariable Long userId) {
+    public ResponseEntity<List<OrderDTO>> getAllOrdersByUserId(@PathVariable Long userId) {
         return ResponseEntity.ok(orderService.getAllOrdersByUserId(userId));
     }
 
     @GetMapping("/getAllOrdersByUsername/{username}")
-    public ResponseEntity<List<Order>> getAllOrdersByUsername(@PathVariable String username) {
+    public ResponseEntity<List<OrderDTO>> getAllOrdersByUsername(@PathVariable String username) {
         return ResponseEntity.ok(orderService.getAllOrdersByUsername(username));
     }
 
     @PostMapping("/addOrderByUserIdBasket/{userId}")
-    public ResponseEntity<Order> addOrderByUserIdBasket(@PathVariable Long userId) {
+    public ResponseEntity<OrderDTO> addOrderByUserIdBasket(@PathVariable Long userId) {
         return ResponseEntity.ok(orderService.addOrderByUserIdBasket(userId));
     }
 
     @PostMapping("/addOrderByUsernameBasket/{username}")
-    public ResponseEntity<Order> addOrderByUsernameBasket(@PathVariable String username) {
+    public ResponseEntity<OrderDTO> addOrderByUsernameBasket(@PathVariable String username) {
         return ResponseEntity.ok(orderService.addOrderByUsernameBasket(username));
     }
 

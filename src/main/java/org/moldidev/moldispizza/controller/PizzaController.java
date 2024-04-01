@@ -1,5 +1,6 @@
 package org.moldidev.moldispizza.controller;
 
+import org.moldidev.moldispizza.dto.PizzaDTO;
 import org.moldidev.moldispizza.entity.Pizza;
 import org.moldidev.moldispizza.service.PizzaService;
 import org.springframework.http.HttpStatus;
@@ -7,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 public class PizzaController {
@@ -19,32 +19,32 @@ public class PizzaController {
     }
 
     @GetMapping("/getAllPizzas")
-    public ResponseEntity<List<Pizza>> getAllPizzas() {
+    public ResponseEntity<List<PizzaDTO>> getAllPizzas() {
         return ResponseEntity.ok(pizzaService.getAllPizzas());
     }
 
     @GetMapping("/getPizzaById/{id}")
-    public ResponseEntity<Pizza> getPizzaById(@PathVariable Long id) {
+    public ResponseEntity<PizzaDTO> getPizzaById(@PathVariable Long id) {
         return ResponseEntity.ok(pizzaService.getPizzaById(id));
     }
 
     @GetMapping("/getPizzaByPizzaName/{pizzaName}")
-    public ResponseEntity<Pizza> getPizzaByPizzaName(@PathVariable String pizzaName) {
+    public ResponseEntity<PizzaDTO> getPizzaByPizzaName(@PathVariable String pizzaName) {
         return ResponseEntity.ok(pizzaService.getPizzaByPizzaName(pizzaName));
     }
 
     @PostMapping("/addPizza")
-    public ResponseEntity<Pizza> addPizza(@RequestBody Pizza pizza) {
+    public ResponseEntity<PizzaDTO> addPizza(@RequestBody Pizza pizza) {
         return ResponseEntity.ok(pizzaService.addPizza(pizza));
     }
 
     @PostMapping("/updatePizzaById/{id}")
-    public ResponseEntity<Pizza> updatePizzaById(@PathVariable Long id, @RequestBody Pizza newPizza) {
+    public ResponseEntity<PizzaDTO> updatePizzaById(@PathVariable Long id, @RequestBody Pizza newPizza) {
         return ResponseEntity.ok(pizzaService.updatePizzaById(id, newPizza));
     }
 
     @PostMapping("/updatePizzaByPizzaName/{pizzaName}")
-    public ResponseEntity<Pizza> updatePizzaByPizzaName(@PathVariable String pizzaName, @RequestBody Pizza newPizza) {
+    public ResponseEntity<PizzaDTO> updatePizzaByPizzaName(@PathVariable String pizzaName, @RequestBody Pizza newPizza) {
        return ResponseEntity.ok(pizzaService.updatePizzaByPizzaName(pizzaName, newPizza));
     }
 

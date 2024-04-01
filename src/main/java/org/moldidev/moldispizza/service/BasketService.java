@@ -1,10 +1,12 @@
 package org.moldidev.moldispizza.service;
 
+import org.moldidev.moldispizza.dto.BasketDTO;
 import org.moldidev.moldispizza.entity.Basket;
 import org.moldidev.moldispizza.entity.Pizza;
 import org.moldidev.moldispizza.entity.User;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
+import org.moldidev.moldispizza.mapper.BasketDTOMapper;
 import org.moldidev.moldispizza.repository.BasketRepository;
 import org.moldidev.moldispizza.repository.PizzaRepository;
 import org.moldidev.moldispizza.repository.UserRepository;
@@ -13,40 +15,43 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class BasketService {
     private final BasketRepository basketRepository;
     private final PizzaRepository pizzaRepository;
     private final UserRepository userRepository;
+    private final BasketDTOMapper basketDTOMapper;
 
-    public BasketService(BasketRepository basketRepository, PizzaRepository pizzaRepository, UserRepository userRepository) {
+    public BasketService(BasketRepository basketRepository, PizzaRepository pizzaRepository, UserRepository userRepository, BasketDTOMapper basketDTOMapper) {
         this.basketRepository = basketRepository;
         this.pizzaRepository = pizzaRepository;
         this.userRepository = userRepository;
+        this.basketDTOMapper = basketDTOMapper;
     }
 
-    public List<Basket> getAllBaskets() throws ResourceNotFoundException {
+    public List<BasketDTO> getAllBaskets() throws ResourceNotFoundException {
         List<Basket> basketList = basketRepository.findAll();
 
         if (!basketList.isEmpty()) {
-            return basketList;
+            return basketList.stream().map(basketDTOMapper).collect(Collectors.toList());
         }
 
         throw new ResourceNotFoundException("there are no baskets");
     }
 
-    public Basket getBasketById(Long id) throws ResourceNotFoundException {
+    public BasketDTO getBasketById(Long id) throws ResourceNotFoundException {
         Optional<Basket> foundBasket = basketRepository.findById(id);
 
         if (foundBasket.isPresent()) {
-            return foundBasket.get();
+            return basketDTOMapper.apply(foundBasket.get());
         }
 
         throw new ResourceNotFoundException("basket not found by id: " + id);
     }
 
-    public Basket getBasketByUserId(Long id) throws ResourceNotFoundException {
+    public BasketDTO getBasketByUserId(Long id) throws ResourceNotFoundException {
         Optional<User> foundUser = userRepository.findById(id);
         Optional<Basket> foundBasket = basketRepository.getBasketByUserId(id);
 
@@ -58,10 +63,10 @@ public class BasketService {
             throw new ResourceNotFoundException("basket not found by user id: " + id);
         }
 
-        return foundBasket.get();
+        return basketDTOMapper.apply(foundBasket.get());
     }
 
-    public Basket getBasketByUsername(String username) throws ResourceNotFoundException {
+    public BasketDTO getBasketByUsername(String username) throws ResourceNotFoundException {
         Optional<User> foundUser = userRepository.findUserByUsername(username);
         Optional<Basket> foundBasket = basketRepository.getBasketByUsername(username);
 
@@ -73,7 +78,7 @@ public class BasketService {
             throw new ResourceNotFoundException("basket not found by username: " + username);
         }
 
-        return foundBasket.get();
+        return basketDTOMapper.apply(foundBasket.get());
     }
 
     public Double getBasketTotalPriceByUserId(Long id) throws ResourceNotFoundException {
@@ -116,17 +121,19 @@ public class BasketService {
         return foundPrice.get();
     }
 
-    public Basket addBasket(Basket basket) throws ResourceAlreadyExistsException {
+    public BasketDTO addBasket(Basket basket) throws ResourceAlreadyExistsException {
         Optional<Basket> foundBasket = basketRepository.getBasketByUsername(basket.getUser().getUsername());
 
         if (foundBasket.isPresent()) {
             throw new ResourceNotFoundException(basket.getUser().getUsername() + " already has a basket");
         }
 
-        return basketRepository.save(basket);
+        Basket savedBasket = basketRepository.save(basket);
+
+        return basketDTOMapper.apply(savedBasket);
     }
 
-    public Basket addPizzaToBasketByBasketIdAndPizzaId(Long basketId, Long pizzaId) throws ResourceNotFoundException {
+    public BasketDTO addPizzaToBasketByBasketIdAndPizzaId(Long basketId, Long pizzaId) throws ResourceNotFoundException {
         Optional<Basket> foundBasket = basketRepository.findById(basketId);
         Optional<Pizza> foundPizza = pizzaRepository.findById(pizzaId);
 
@@ -142,11 +149,12 @@ public class BasketService {
 
         updatedBasket.addPizza(foundPizza.get());
 
-        return basketRepository.save(updatedBasket);
+        Basket savedBasket = basketRepository.save(updatedBasket);
 
+        return basketDTOMapper.apply(savedBasket);
     }
 
-    public Basket addPizzaToBasketByUserIdAndPizzaId(Long userId, Long pizzaId) throws ResourceNotFoundException {
+    public BasketDTO addPizzaToBasketByUserIdAndPizzaId(Long userId, Long pizzaId) throws ResourceNotFoundException {
         Optional<User> foundUser = userRepository.findById(userId);
         Optional<Basket> foundBasket = basketRepository.getBasketByUserId(userId);
         Optional<Pizza> foundPizza = pizzaRepository.findById(pizzaId);
@@ -167,10 +175,12 @@ public class BasketService {
 
         updatedBasket.addPizza(foundPizza.get());
 
-        return basketRepository.save(updatedBasket);
+        Basket savedBasket = basketRepository.save(updatedBasket);
+
+        return basketDTOMapper.apply(savedBasket);
     }
 
-    public Basket updateBasketById(Long id, Basket newBasket) throws ResourceNotFoundException {
+    public BasketDTO updateBasketById(Long id, Basket newBasket) throws ResourceNotFoundException {
         Optional<Basket> foundBasket = basketRepository.findById(id);
 
         if (foundBasket.isEmpty()) {
@@ -182,11 +192,12 @@ public class BasketService {
         updatedBasket.setUser(newBasket.getUser());
         updatedBasket.setPizzaList(newBasket.getPizzaList());
 
-        return basketRepository.save(updatedBasket);
+        Basket savedBasket = basketRepository.save(updatedBasket);
 
+        return basketDTOMapper.apply(savedBasket);
     }
 
-    public Basket updateBasketByUserId(Long id, Basket newBasket) throws ResourceNotFoundException {
+    public BasketDTO updateBasketByUserId(Long id, Basket newBasket) throws ResourceNotFoundException {
         Optional<User> foundUser = userRepository.findById(id);
         Optional<Basket> foundBasket = basketRepository.getBasketByUserId(id);
 
@@ -203,11 +214,12 @@ public class BasketService {
         updatedBasket.setUser(newBasket.getUser());
         updatedBasket.setPizzaList(newBasket.getPizzaList());
 
-        return basketRepository.save(updatedBasket);
+        Basket savedBasket = basketRepository.save(updatedBasket);
 
+        return basketDTOMapper.apply(savedBasket);
     }
 
-    public Basket updateBasketByUsername(String username, Basket newBasket) throws ResourceNotFoundException {
+    public BasketDTO updateBasketByUsername(String username, Basket newBasket) throws ResourceNotFoundException {
         Optional<User> foundUser = userRepository.findUserByUsername(username);
         Optional<Basket> foundBasket = basketRepository.getBasketByUsername(username);
 
@@ -224,10 +236,12 @@ public class BasketService {
         updatedBasket.setUser(newBasket.getUser());
         updatedBasket.setPizzaList(newBasket.getPizzaList());
 
-        return basketRepository.save(updatedBasket);
+        Basket savedBasket = basketRepository.save(updatedBasket);
+
+        return basketDTOMapper.apply(savedBasket);
     }
 
-    public Basket deletePizzaFromBasketByBasketIdAndPizzaId(Long basketId, Long pizzaId) throws ResourceNotFoundException {
+    public BasketDTO deletePizzaFromBasketByBasketIdAndPizzaId(Long basketId, Long pizzaId) throws ResourceNotFoundException {
         Optional<Basket> foundBasket = basketRepository.findById(basketId);
         Optional<Pizza> foundPizza = pizzaRepository.findById(pizzaId);
 
@@ -243,11 +257,12 @@ public class BasketService {
 
         updatedBasket.getPizzaList().remove(foundPizza.get());
 
-        return basketRepository.save(updatedBasket);
+        Basket savedBasket = basketRepository.save(updatedBasket);
 
+        return basketDTOMapper.apply(savedBasket);
     }
 
-    public Basket deletePizzaFromBasketByUserIdAndPizzaId(Long userId, Long pizzaId) throws ResourceNotFoundException {
+    public BasketDTO deletePizzaFromBasketByUserIdAndPizzaId(Long userId, Long pizzaId) throws ResourceNotFoundException {
         Optional<User> foundUser = userRepository.findById(userId);
         Optional<Basket> foundBasket = basketRepository.getBasketByUserId(userId);
         Optional<Pizza> foundPizza = pizzaRepository.findById(pizzaId);
@@ -272,10 +287,12 @@ public class BasketService {
 
         updatedBasket.getPizzaList().remove(foundPizza.get());
 
-        return basketRepository.save(updatedBasket);
+        Basket savedBasket = basketRepository.save(updatedBasket);
+
+        return basketDTOMapper.apply(savedBasket);
     }
 
-    public Basket deletePizzaFromBasketByUsernameAndPizzaId(String username, Long pizzaId) throws ResourceNotFoundException {
+    public BasketDTO deletePizzaFromBasketByUsernameAndPizzaId(String username, Long pizzaId) throws ResourceNotFoundException {
         Optional<User> foundUser = userRepository.findUserByUsername(username);
         Optional<Basket> foundBasket = basketRepository.getBasketByUsername(username);
         Optional<Pizza> foundPizza = pizzaRepository.findById(pizzaId);
@@ -300,7 +317,9 @@ public class BasketService {
 
         updatedBasket.getPizzaList().remove(foundPizza.get());
 
-        return basketRepository.save(updatedBasket);
+        Basket savedBasket = basketRepository.save(updatedBasket);
+
+        return basketDTOMapper.apply(savedBasket);
     }
 
     @Transactional

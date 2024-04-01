@@ -1,10 +1,12 @@
 package org.moldidev.moldispizza.service;
 
+import org.moldidev.moldispizza.dto.OrderDTO;
 import org.moldidev.moldispizza.entity.Basket;
 import org.moldidev.moldispizza.entity.Order;
 import org.moldidev.moldispizza.entity.Pizza;
 import org.moldidev.moldispizza.entity.User;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
+import org.moldidev.moldispizza.mapper.OrderDTOMapper;
 import org.moldidev.moldispizza.repository.BasketRepository;
 import org.moldidev.moldispizza.repository.OrderRepository;
 import org.moldidev.moldispizza.repository.UserRepository;
@@ -15,40 +17,43 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
     private final OrderRepository orderRepository;
     private final BasketRepository basketRepository;
     private final UserRepository userRepository;
+    private final OrderDTOMapper orderDTOMapper;
 
-    public OrderService(OrderRepository orderRepository, BasketRepository basketRepository, UserRepository userRepository) {
+    public OrderService(OrderRepository orderRepository, BasketRepository basketRepository, UserRepository userRepository, OrderDTOMapper orderDTOMapper) {
         this.orderRepository = orderRepository;
         this.basketRepository = basketRepository;
         this.userRepository = userRepository;
+        this.orderDTOMapper = orderDTOMapper;
     }
 
-    public List<Order> getAllOrders() throws ResourceNotFoundException {
+    public List<OrderDTO> getAllOrders() throws ResourceNotFoundException {
         List<Order> orderList = orderRepository.findAll();
 
         if (!orderList.isEmpty()) {
-            return orderList;
+            return orderList.stream().map(orderDTOMapper).collect(Collectors.toList());
         }
 
         throw new ResourceNotFoundException("there are no orders");
     }
 
-    public Order getOrderById(Long id) throws ResourceNotFoundException {
+    public OrderDTO getOrderById(Long id) throws ResourceNotFoundException {
         Optional<Order> foundOrder = orderRepository.findById(id);
 
         if (foundOrder.isPresent()) {
-            return foundOrder.get();
+            return orderDTOMapper.apply(foundOrder.get());
         }
 
         throw new ResourceNotFoundException("order not found by id: " + id);
     }
 
-    public List<Order> getAllOrdersByUserId(Long userId) throws ResourceNotFoundException {
+    public List<OrderDTO> getAllOrdersByUserId(Long userId) throws ResourceNotFoundException {
         Optional<User> foundUser = userRepository.findById(userId);
         List<Order> orderList = orderRepository.getAllOrdersByUserId(userId);
 
@@ -57,13 +62,13 @@ public class OrderService {
         }
 
         if (!orderList.isEmpty()) {
-            return orderList;
+            return orderList.stream().map(orderDTOMapper).collect(Collectors.toList());
         }
 
         throw new ResourceNotFoundException("user with id " + userId + " has no orders");
     }
 
-    public List<Order> getAllOrdersByUsername(String username) throws ResourceNotFoundException {
+    public List<OrderDTO> getAllOrdersByUsername(String username) throws ResourceNotFoundException {
         Optional<User> foundUser = userRepository.findUserByUsername(username);
         List<Order> orderList = orderRepository.getAllOrdersByUsername(username);
 
@@ -72,13 +77,13 @@ public class OrderService {
         }
 
         if (!orderList.isEmpty()) {
-            return orderList;
+            return orderList.stream().map(orderDTOMapper).collect(Collectors.toList());
         }
 
         throw new ResourceNotFoundException(username + " has no orders");
     }
 
-    public Order addOrderByUserIdBasket(Long userId) throws ResourceNotFoundException {
+    public OrderDTO addOrderByUserIdBasket(Long userId) throws ResourceNotFoundException {
         Optional<Basket> userBasket = basketRepository.getBasketByUserId(userId);
         Optional<Double> totalOrderPrice = basketRepository.getBasketTotalPriceByUserId(userId);
         Optional<User> user = userRepository.findById(userId);
@@ -111,10 +116,12 @@ public class OrderService {
 
         basketRepository.save(userBasket.get());
 
-        return orderRepository.save(orderToAdd);
+        Order savedOrder = orderRepository.save(orderToAdd);
+
+        return orderDTOMapper.apply(savedOrder);
     }
 
-    public Order addOrderByUsernameBasket(String username) {
+    public OrderDTO addOrderByUsernameBasket(String username) {
         Optional<Basket> userBasket = basketRepository.getBasketByUsername(username);
         Optional<Double> totalOrderPrice = basketRepository.getBasketTotalPriceByUsername(username);
         Optional<User> user = userRepository.findUserByUsername(username);
@@ -147,7 +154,9 @@ public class OrderService {
 
         basketRepository.save(userBasket.get());
 
-        return orderRepository.save(orderToAdd);
+        Order savedOrder = orderRepository.save(orderToAdd);
+
+        return orderDTOMapper.apply(savedOrder);
     }
 
     @Transactional

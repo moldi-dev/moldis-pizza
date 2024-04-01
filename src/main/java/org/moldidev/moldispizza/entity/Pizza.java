@@ -2,7 +2,6 @@ package org.moldidev.moldispizza.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.lang.NonNull;
 
 @Entity
 @Setter
