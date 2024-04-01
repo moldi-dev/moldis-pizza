@@ -22,6 +22,17 @@ public class RestExceptionHandler {
         return new ResponseEntity<>(message, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(InvalidArgumentException.class)
+    public ResponseEntity<ErrorMessage> handleInvalidArgumentException(InvalidArgumentException exception, WebRequest request) {
+        ErrorMessage message = new ErrorMessage(
+                HttpStatus.BAD_REQUEST.value(),
+                new Date(),
+                exception.getMessage(),
+                request.getDescription(false));
+
+        return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity<ErrorMessage> handleResourceAlreadyExistsException(ResourceAlreadyExistsException exception, WebRequest request) {
         ErrorMessage message = new ErrorMessage(

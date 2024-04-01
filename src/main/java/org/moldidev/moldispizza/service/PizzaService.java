@@ -1,6 +1,7 @@
 package org.moldidev.moldispizza.service;
 
 import org.moldidev.moldispizza.entity.Pizza;
+import org.moldidev.moldispizza.exception.InvalidArgumentException;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.repository.PizzaRepository;
@@ -48,11 +49,15 @@ public class PizzaService {
         throw new ResourceNotFoundException("pizza not found by name: " + name);
     }
 
-    public Pizza addPizza(Pizza pizza) throws ResourceAlreadyExistsException {
+    public Pizza addPizza(Pizza pizza) throws ResourceAlreadyExistsException, InvalidArgumentException {
         Optional<Pizza> foundPizza = pizzaRepository.findPizzaByName(pizza.getName());
 
         if (foundPizza.isPresent()) {
             throw new ResourceAlreadyExistsException("pizza with name '" + pizza.getName() + "' already exists");
+        }
+
+        else if (pizza.getPrice() <= 0) {
+            throw new InvalidArgumentException("pizza's price must be greater than 0");
         }
 
         return pizzaRepository.save(pizza);

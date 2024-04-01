@@ -264,6 +264,10 @@ public class BasketService {
             throw new ResourceNotFoundException("pizza not found by id: " + pizzaId);
         }
 
+        else if (!isPizzaInBasket(foundBasket.get(), foundPizza.get())) {
+            throw new ResourceNotFoundException("pizza with id " + pizzaId + " is not in the basket owned by user with id " + userId);
+        }
+
         Basket updatedBasket = foundBasket.get();
 
         updatedBasket.getPizzaList().remove(foundPizza.get());
@@ -286,6 +290,10 @@ public class BasketService {
 
         else if (foundPizza.isEmpty()) {
             throw new ResourceNotFoundException("pizza not found by id: " + pizzaId);
+        }
+
+        else if (!isPizzaInBasket(foundBasket.get(), foundPizza.get())) {
+            throw new ResourceNotFoundException("pizza with id " + pizzaId + " is not in the basket owned by user '" + username + "'");
         }
 
         Basket updatedBasket = foundBasket.get();
@@ -338,5 +346,15 @@ public class BasketService {
         }
 
         basketRepository.deleteBasketByUsername(username);
+    }
+
+    private boolean isPizzaInBasket(Basket basket, Pizza pizza) {
+        for (Pizza currentPizza : basket.getPizzaList()) {
+            if (currentPizza.getName().equals(pizza.getName())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
