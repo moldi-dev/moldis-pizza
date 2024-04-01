@@ -4,6 +4,7 @@ import org.moldidev.moldispizza.entity.Basket;
 import org.moldidev.moldispizza.entity.Order;
 import org.moldidev.moldispizza.entity.Pizza;
 import org.moldidev.moldispizza.entity.User;
+import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.repository.BasketRepository;
 import org.moldidev.moldispizza.repository.OrderRepository;
 import org.moldidev.moldispizza.repository.UserRepository;
@@ -27,44 +28,90 @@ public class OrderService {
         this.userRepository = userRepository;
     }
 
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+    public List<Order> getAllOrders() throws ResourceNotFoundException {
+        List<Order> orderList = orderRepository.findAll();
+
+        if (!orderList.isEmpty()) {
+            return orderList;
+        }
+
+        throw new ResourceNotFoundException("there are no orders");
     }
 
-    public Optional<Order> getOrderById(Long id) {
-        return orderRepository.findById(id);
+    public Order getOrderById(Long id) throws ResourceNotFoundException {
+        Optional<Order> foundOrder = orderRepository.findById(id);
+
+        if (foundOrder.isPresent()) {
+            return foundOrder.get();
+        }
+
+        throw new ResourceNotFoundException("order not found by id: " + id);
     }
 
-    public List<Order> getAllOrdersByUserId(Long userId) {
-        return orderRepository.getAllOrdersByUserId(userId);
+    public List<Order> getAllOrdersByUserId(Long userId) throws ResourceNotFoundException {
+        Optional<User> foundUser = userRepository.findById(userId);
+        List<Order> orderList = orderRepository.getAllOrdersByUserId(userId);
+
+        if (foundUser.isEmpty()) {
+            throw new ResourceNotFoundException("user not found by id: " + userId);
+        }
+
+        if (!orderList.isEmpty()) {
+            return orderList;
+        }
+
+        throw new ResourceNotFoundException("user with id " + userId + " has no orders");
     }
 
-    public List<Order> getAllOrdersByUsername(String username) {
-        return orderRepository.getAllOrdersByUsername(username);
+    public List<Order> getAllOrdersByUsername(String username) throws ResourceNotFoundException {
+        Optional<User> foundUser = userRepository.findUserByUsername(username);
+        List<Order> orderList = orderRepository.getAllOrdersByUsername(username);
+
+        if (foundUser.isEmpty()) {
+            throw new ResourceNotFoundException("user not found by username: " + username);
+        }
+
+        if (!orderList.isEmpty()) {
+            return orderList;
+        }
+
+        throw new ResourceNotFoundException(username + " has no orders");
     }
 
-    public Order addOrderByUserIdBasket(Long userId) {
+    public Order addOrderByUserIdBasket(Long userId) throws ResourceNotFoundException {
         Optional<Basket> userBasket = basketRepository.getBasketByUserId(userId);
         Optional<Double> totalOrderPrice = basketRepository.getBasketTotalPriceByUserId(userId);
         Optional<User> user = userRepository.findById(userId);
 
-        if (userBasket.isPresent() && totalOrderPrice.isPresent() && user.isPresent()) {
-            Order orderToAdd = new Order();
-
-            orderToAdd.setUser(user.get());
-            List<Pizza> pizzasInOrder = new ArrayList<>(userBasket.get().getPizzaList());
-            orderToAdd.setPizzaList(pizzasInOrder);
-            orderToAdd.setDate(java.sql.Date.valueOf(LocalDate.now()));
-            orderToAdd.setPrice(totalOrderPrice.get());
-
-            userBasket.get().getPizzaList().clear();
-
-            basketRepository.save(userBasket.get());
-
-            return orderRepository.save(orderToAdd);
+        if (user.isEmpty()) {
+            throw new ResourceNotFoundException("user not found by id: " + userId);
         }
 
-        return null;
+        else if (userBasket.isEmpty()) {
+            throw new ResourceNotFoundException("basket not found by user id: " + userId);
+        }
+
+        else if (userBasket.get().getPizzaList().isEmpty()) {
+            throw new ResourceNotFoundException(user.get().getUsername() + " has an empty basket");
+        }
+
+        else if (totalOrderPrice.isEmpty()) {
+            throw new ResourceNotFoundException("total basket price not found by user id: " + userId);
+        }
+
+        Order orderToAdd = new Order();
+
+        orderToAdd.setUser(user.get());
+        List<Pizza> pizzasInOrder = new ArrayList<>(userBasket.get().getPizzaList());
+        orderToAdd.setPizzaList(pizzasInOrder);
+        orderToAdd.setDate(java.sql.Date.valueOf(LocalDate.now()));
+        orderToAdd.setPrice(totalOrderPrice.get());
+
+        userBasket.get().getPizzaList().clear();
+
+        basketRepository.save(userBasket.get());
+
+        return orderRepository.save(orderToAdd);
     }
 
     public Order addOrderByUsernameBasket(String username) {
@@ -72,26 +119,47 @@ public class OrderService {
         Optional<Double> totalOrderPrice = basketRepository.getBasketTotalPriceByUsername(username);
         Optional<User> user = userRepository.findUserByUsername(username);
 
-        if (userBasket.isPresent() && totalOrderPrice.isPresent() && user.isPresent()) {
-            Order orderToAdd = new Order();
-
-            orderToAdd.setUser(user.get());
-            List<Pizza> pizzasInOrder = new ArrayList<>(userBasket.get().getPizzaList());
-            orderToAdd.setPizzaList(pizzasInOrder);
-            orderToAdd.setDate(java.sql.Date.valueOf(LocalDate.now()));
-            orderToAdd.setPrice(totalOrderPrice.get());
-
-            userBasket.get().getPizzaList().clear();
-
-            basketRepository.save(userBasket.get());
-
-            return orderRepository.save(orderToAdd);
+        if (user.isEmpty()) {
+            throw new ResourceNotFoundException("user not found by username: " + username);
         }
 
-        return null;
+        else if (userBasket.isEmpty()) {
+            throw new ResourceNotFoundException("basket not found by username: " + username);
+        }
+
+        else if (userBasket.get().getPizzaList().isEmpty()) {
+            throw new ResourceNotFoundException(username + " has an empty basket");
+        }
+
+        else if (totalOrderPrice.isEmpty()) {
+            throw new ResourceNotFoundException("total basket price not found by username: " + username);
+        }
+
+        Order orderToAdd = new Order();
+
+        orderToAdd.setUser(user.get());
+        List<Pizza> pizzasInOrder = new ArrayList<>(userBasket.get().getPizzaList());
+        orderToAdd.setPizzaList(pizzasInOrder);
+        orderToAdd.setDate(java.sql.Date.valueOf(LocalDate.now()));
+        orderToAdd.setPrice(totalOrderPrice.get());
+
+        userBasket.get().getPizzaList().clear();
+
+        basketRepository.save(userBasket.get());
+
+        return orderRepository.save(orderToAdd);
     }
 
-    public void deleteOrderById(Long id) {
-        orderRepository.deleteById(id);
+    @Transactional
+    public void deleteOrderById(Long id) throws ResourceNotFoundException {
+        Optional<Order> foundOrder = orderRepository.findById(id);
+
+        if (foundOrder.isPresent()) {
+            orderRepository.deleteById(id);
+        }
+
+        else {
+            throw new ResourceNotFoundException("order not found by id: " + id);
+        }
     }
 }

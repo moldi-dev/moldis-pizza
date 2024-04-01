@@ -1,11 +1,17 @@
 package org.moldidev.moldispizza.service;
 
+import org.moldidev.moldispizza.entity.Basket;
 import org.moldidev.moldispizza.entity.User;
+import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
+import org.moldidev.moldispizza.exception.ResourceNotFoundException;
+import org.moldidev.moldispizza.repository.BasketRepository;
+import org.moldidev.moldispizza.repository.OrderRepository;
 import org.moldidev.moldispizza.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,24 +19,52 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final BasketRepository basketRepository;
+    private final OrderRepository orderRepository;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, BasketRepository basketRepository, OrderRepository orderRepository) {
         this.userRepository = userRepository;
+        this.basketRepository = basketRepository;
+        this.orderRepository = orderRepository;
     }
 
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        List<User> userList = userRepository.findAll();
+
+        if (!userList.isEmpty()) {
+            return userList;
+        }
+
+        throw new ResourceNotFoundException("there are no users");
     }
 
-    public Optional<User> getUserById(Long id) {
-        return userRepository.findById(id);
+    public User getUserById(Long id) throws ResourceNotFoundException {
+        Optional<User> foundUser = userRepository.findById(id);
+
+        if (foundUser.isPresent()) {
+            return foundUser.get();
+        }
+
+        throw new ResourceNotFoundException("user not found by id: " + id);
     }
 
-    public Optional<User> getUserByUsername(String username) {
-        return userRepository.findUserByUsername(username);
+    public User getUserByUsername(String username) throws ResourceNotFoundException{
+        Optional<User> foundUser = userRepository.findUserByUsername(username);
+
+        if (foundUser.isPresent()) {
+            return foundUser.get();
+        }
+
+        throw new ResourceNotFoundException("user not found by username: " + username);
     }
 
-    public User addUser(User user) {
+    public User addUser(User user) throws ResourceAlreadyExistsException {
+        Optional<User> alreadyExistentUser = userRepository.findUserByUsername(user.getUsername());
+
+        if (alreadyExistentUser.isPresent()) {
+            throw new ResourceAlreadyExistsException("user with username '" + user.getUsername() + "' already exists");
+        }
+
         String plainPassword = user.getPassword();
 
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -38,10 +72,17 @@ public class UserService {
 
         user.setPassword(encryptedPassword);
 
-        return userRepository.save(user);
+        Basket basket = new Basket();
+        basket.setUser(user);
+        basket.setPizzaList(new ArrayList<>());
+
+        User savedUser = userRepository.save(user);
+        basketRepository.save(basket);
+
+        return savedUser;
     }
 
-    public Optional<User> updateUserById(Long id, User newUser) {
+    public User updateUserById(Long id, User newUser) throws ResourceNotFoundException {
         Optional<User> foundUser = userRepository.findById(id);
 
         if (foundUser.isPresent()) {
@@ -51,13 +92,13 @@ public class UserService {
             updatedUser.setPassword(newUser.getPassword());
             updatedUser.setRole(newUser.getRole());
 
-            return Optional.of(userRepository.save(updatedUser));
+            return userRepository.save(updatedUser);
         }
 
-        return Optional.empty();
+        throw new ResourceNotFoundException("user not found by id: " + id);
     }
 
-    public Optional<User> updateUserByUsername(String username, User newUser) {
+    public User updateUserByUsername(String username, User newUser) throws ResourceNotFoundException {
         Optional<User> foundUser = userRepository.findUserByUsername(username);
 
         if (foundUser.isPresent()) {
@@ -67,18 +108,39 @@ public class UserService {
             updatedUser.setPassword(newUser.getPassword());
             updatedUser.setRole(newUser.getRole());
 
-            return Optional.of(userRepository.save(updatedUser));
+            return userRepository.save(updatedUser);
         }
 
-        return Optional.empty();
-    }
-
-    public void deleteUserById(Long id) {
-        userRepository.deleteById(id);
+        throw new ResourceNotFoundException("user not found by username: " + username);
     }
 
     @Transactional
-    public void deleteUserByUsername(String username) {
-        userRepository.deleteUserByUsername(username);
+    public void deleteUserById(Long id) throws ResourceNotFoundException {
+        Optional<User> foundUser = userRepository.findById(id);
+
+        if (foundUser.isPresent()) {
+            orderRepository.deleteAllOrdersByUserId(id);
+            basketRepository.deleteBasketByUserId(id);
+            userRepository.deleteById(id);
+        }
+
+        else {
+            throw new ResourceNotFoundException("user not found by id: " + id);
+        }
+    }
+
+    @Transactional
+    public void deleteUserByUsername(String username) throws ResourceNotFoundException {
+        Optional<User> foundUser = userRepository.findUserByUsername(username);
+
+        if (foundUser.isPresent()) {
+            orderRepository.deleteAllOrdersByUsername(username);
+            basketRepository.deleteBasketByUsername(username);
+            userRepository.deleteUserByUsername(username);
+        }
+
+        else {
+            throw new ResourceNotFoundException("user not found by username: " + username);
+        }
     }
 }

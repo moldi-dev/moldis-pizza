@@ -1,6 +1,8 @@
 package org.moldidev.moldispizza.service;
 
 import org.moldidev.moldispizza.entity.Pizza;
+import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
+import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.repository.PizzaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,23 +18,47 @@ public class PizzaService {
         this.pizzaRepository = pizzaRepository;
     }
 
-    public List<Pizza> getAllPizzas() {
-        return pizzaRepository.findAll();
+    public List<Pizza> getAllPizzas() throws ResourceNotFoundException {
+        List<Pizza> pizzaList = pizzaRepository.findAll();
+
+        if (!pizzaList.isEmpty()) {
+            return pizzaList;
+        }
+
+        throw new ResourceNotFoundException("there are no pizzas");
     }
 
-    public Optional<Pizza> getPizzaById(Long id) {
-        return pizzaRepository.findById(id);
+    public Pizza getPizzaById(Long id) throws ResourceNotFoundException {
+        Optional<Pizza> foundPizza = pizzaRepository.findById(id);
+
+        if (foundPizza.isPresent()) {
+            return foundPizza.get();
+        }
+
+        throw new ResourceNotFoundException("pizza not found by id: " + id);
     }
 
-    public Optional<Pizza> getPizzaByPizzaName(String name) {
-        return pizzaRepository.findPizzaByName(name);
+    public Pizza getPizzaByPizzaName(String name) throws ResourceNotFoundException {
+        Optional<Pizza> foundPizza = pizzaRepository.findPizzaByName(name);
+
+        if (foundPizza.isPresent()) {
+            return foundPizza.get();
+        }
+
+        throw new ResourceNotFoundException("pizza not found by name: " + name);
     }
 
-    public Pizza addPizza(Pizza pizza) {
+    public Pizza addPizza(Pizza pizza) throws ResourceAlreadyExistsException {
+        Optional<Pizza> foundPizza = pizzaRepository.findPizzaByName(pizza.getName());
+
+        if (foundPizza.isPresent()) {
+            throw new ResourceAlreadyExistsException("pizza with name '" + pizza.getName() + "' already exists");
+        }
+
         return pizzaRepository.save(pizza);
     }
 
-    public Optional<Pizza> updatePizzaById(Long id, Pizza newPizza) {
+    public Pizza updatePizzaById(Long id, Pizza newPizza) throws ResourceNotFoundException {
         Optional<Pizza> foundPizza = pizzaRepository.findById(id);
 
         if (foundPizza.isPresent()) {
@@ -42,13 +68,13 @@ public class PizzaService {
             updatedPizza.setIngredients(newPizza.getIngredients());
             updatedPizza.setPrice(newPizza.getPrice());
 
-            return Optional.of(pizzaRepository.save(updatedPizza));
+            return pizzaRepository.save(updatedPizza);
         }
 
-        return Optional.empty();
+        throw new ResourceNotFoundException("pizza not found by id: " + id);
     }
 
-    public Optional<Pizza> updatePizzaByPizzaName(String pizzaName, Pizza newPizza) {
+    public Pizza updatePizzaByPizzaName(String pizzaName, Pizza newPizza) throws ResourceNotFoundException {
         Optional<Pizza> foundPizza = pizzaRepository.findPizzaByName(pizzaName);
 
         if (foundPizza.isPresent()) {
@@ -58,18 +84,35 @@ public class PizzaService {
             updatedPizza.setIngredients(newPizza.getIngredients());
             updatedPizza.setPrice(newPizza.getPrice());
 
-            return Optional.of(pizzaRepository.save(updatedPizza));
+            return pizzaRepository.save(updatedPizza);
         }
 
-        return Optional.empty();
+        throw new ResourceNotFoundException("pizza not found by name: " + pizzaName);
     }
 
-    public void deletePizzaById(Long id) {
-        pizzaRepository.deleteById(id);
+    @Transactional
+    public void deletePizzaById(Long id) throws ResourceNotFoundException {
+        Optional<Pizza> foundPizza = pizzaRepository.findById(id);
+
+        if (foundPizza.isPresent()) {
+            pizzaRepository.deleteById(id);
+        }
+
+        else {
+            throw new ResourceNotFoundException("pizza not found by id: " + id);
+        }
     }
 
     @Transactional
     public void deletePizzaByPizzaName(String pizzaName) {
-        pizzaRepository.deletePizzaByName(pizzaName);
+        Optional<Pizza> foundPizza = pizzaRepository.findPizzaByName(pizzaName);
+
+        if (foundPizza.isPresent()) {
+            pizzaRepository.deletePizzaByName(pizzaName);
+        }
+
+        else {
+            throw new ResourceNotFoundException("pizza not found by name: " + pizzaName);
+        }
     }
 }

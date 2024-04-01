@@ -2,6 +2,7 @@ package org.moldidev.moldispizza.repository;
 
 import org.moldidev.moldispizza.entity.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,4 +17,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("SELECT order FROM Order order JOIN order.user WHERE order.user.username = :username")
     List<Order> getAllOrdersByUsername(@Param("username") String username);
+
+    @Modifying
+    @Query("DELETE FROM Order order WHERE order.user.id = :userId")
+    int deleteAllOrdersByUserId(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("DELETE FROM Order order WHERE order.user.username = :username")
+    int deleteAllOrdersByUsername(@Param("username") String username);
 }
