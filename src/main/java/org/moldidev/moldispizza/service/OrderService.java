@@ -6,7 +6,7 @@ import org.moldidev.moldispizza.entity.Order;
 import org.moldidev.moldispizza.entity.Pizza;
 import org.moldidev.moldispizza.entity.User;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
-import org.moldidev.moldispizza.mapper.OrderDTOMapper;
+import org.moldidev.moldispizza.dto.OrderDTOMapper;
 import org.moldidev.moldispizza.repository.BasketRepository;
 import org.moldidev.moldispizza.repository.OrderRepository;
 import org.moldidev.moldispizza.repository.UserRepository;

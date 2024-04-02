@@ -5,7 +5,7 @@ import org.moldidev.moldispizza.entity.Pizza;
 import org.moldidev.moldispizza.exception.InvalidArgumentException;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
-import org.moldidev.moldispizza.mapper.PizzaDTOMapper;
+import org.moldidev.moldispizza.dto.PizzaDTOMapper;
 import org.moldidev.moldispizza.repository.PizzaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,11 +74,19 @@ public class PizzaService {
         return pizzaDTOMapper.apply(savedPizza);
     }
 
-    public PizzaDTO updatePizzaById(Long id, Pizza newPizza) throws ResourceNotFoundException {
+    public PizzaDTO updatePizzaById(Long id, Pizza newPizza) throws ResourceNotFoundException, InvalidArgumentException {
         Optional<Pizza> foundPizza = pizzaRepository.findById(id);
 
         if (foundPizza.isPresent()) {
             Pizza updatedPizza = foundPizza.get();
+
+            if (updatedPizza.getName().length() > 100) {
+                throw new InvalidArgumentException("pizza's name must be at most 100 characters long");
+            }
+
+            else if (updatedPizza.getPrice() <= 0) {
+                throw new InvalidArgumentException("pizza's price must be greater than 0");
+            }
 
             updatedPizza.setName(newPizza.getName());
             updatedPizza.setIngredients(newPizza.getIngredients());
@@ -97,6 +105,14 @@ public class PizzaService {
 
         if (foundPizza.isPresent()) {
             Pizza updatedPizza = foundPizza.get();
+
+            if (updatedPizza.getName().length() > 100) {
+                throw new InvalidArgumentException("pizza's name must be at most 100 characters long");
+            }
+
+            else if (updatedPizza.getPrice() <= 0) {
+                throw new InvalidArgumentException("pizza's price must be greater than 0");
+            }
 
             updatedPizza.setName(newPizza.getName());
             updatedPizza.setIngredients(newPizza.getIngredients());

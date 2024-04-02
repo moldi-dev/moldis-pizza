@@ -6,7 +6,7 @@ import org.moldidev.moldispizza.entity.User;
 import org.moldidev.moldispizza.exception.InvalidArgumentException;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
-import org.moldidev.moldispizza.mapper.UserDTOMapper;
+import org.moldidev.moldispizza.dto.UserDTOMapper;
 import org.moldidev.moldispizza.repository.BasketRepository;
 import org.moldidev.moldispizza.repository.OrderRepository;
 import org.moldidev.moldispizza.repository.UserRepository;
@@ -103,11 +103,27 @@ public class UserService {
         return userDTOMapper.apply(savedUser);
     }
 
-    public UserDTO updateUserById(Long id, User newUser) throws ResourceNotFoundException {
+    public UserDTO updateUserById(Long id, User newUser) throws ResourceNotFoundException, InvalidArgumentException {
         Optional<User> foundUser = userRepository.findById(id);
 
         if (foundUser.isPresent()) {
             User updatedUser = foundUser.get();
+
+            String passwordRegex = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$";
+            String usernameRegex = "^[a-zA-Z0-9_]{8,50}$";
+            String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,200}$";
+
+            if (!updatedUser.getUsername().matches(usernameRegex)) {
+                throw new InvalidArgumentException("the username must consist of alphanumeric characters and underscores only, with a length between 8 and 50 characters");
+            }
+
+            else if (!updatedUser.getPassword().matches(passwordRegex)) {
+                throw new InvalidArgumentException("the password must contain at least one lowercase letter, at least one uppercase letter, at least one digit, at least one special character and must be at least 8 characters long");
+            }
+
+            else if (!updatedUser.getEmail().matches(emailRegex)) {
+                throw new InvalidArgumentException("the email must follow the standard 'example@example.example' format and must be at most 200 characters long");
+            }
 
             updatedUser.setUsername(newUser.getUsername());
             updatedUser.setPassword(newUser.getPassword());
@@ -126,6 +142,22 @@ public class UserService {
 
         if (foundUser.isPresent()) {
             User updatedUser = foundUser.get();
+
+            String passwordRegex = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$";
+            String usernameRegex = "^[a-zA-Z0-9_]{8,50}$";
+            String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,200}$";
+
+            if (!updatedUser.getUsername().matches(usernameRegex)) {
+                throw new InvalidArgumentException("the username must consist of alphanumeric characters and underscores only, with a length between 8 and 50 characters");
+            }
+
+            else if (!updatedUser.getPassword().matches(passwordRegex)) {
+                throw new InvalidArgumentException("the password must contain at least one lowercase letter, at least one uppercase letter, at least one digit, at least one special character and must be at least 8 characters long");
+            }
+
+            else if (!updatedUser.getEmail().matches(emailRegex)) {
+                throw new InvalidArgumentException("the email must follow the standard 'example@example.example' format and must be at most 200 characters long");
+            }
 
             updatedUser.setUsername(newUser.getUsername());
             updatedUser.setPassword(newUser.getPassword());

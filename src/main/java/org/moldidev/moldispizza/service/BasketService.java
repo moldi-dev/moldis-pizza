@@ -6,7 +6,7 @@ import org.moldidev.moldispizza.entity.Pizza;
 import org.moldidev.moldispizza.entity.User;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
-import org.moldidev.moldispizza.mapper.BasketDTOMapper;
+import org.moldidev.moldispizza.dto.BasketDTOMapper;
 import org.moldidev.moldispizza.repository.BasketRepository;
 import org.moldidev.moldispizza.repository.PizzaRepository;
 import org.moldidev.moldispizza.repository.UserRepository;
@@ -121,11 +121,16 @@ public class BasketService {
         return foundPrice.get();
     }
 
-    public BasketDTO addBasket(Basket basket) throws ResourceAlreadyExistsException {
-        Optional<Basket> foundBasket = basketRepository.getBasketByUsername(basket.getUser().getUsername());
+    public BasketDTO addBasket(Basket basket) throws ResourceAlreadyExistsException, ResourceNotFoundException {
+        Optional<User> foundUser = userRepository.findById(basket.getUser().getId());
+        Optional<Basket> foundBasket = basketRepository.getBasketByUserId(basket.getUser().getId());
 
-        if (foundBasket.isPresent()) {
-            throw new ResourceNotFoundException(basket.getUser().getUsername() + " already has a basket");
+        if (foundUser.isEmpty()) {
+            throw new ResourceNotFoundException("user not found by id: " + basket.getUser().getId());
+        }
+
+        else if (foundBasket.isPresent()) {
+            throw new ResourceAlreadyExistsException(foundUser.get().getUsername() + " already has a basket");
         }
 
         Basket savedBasket = basketRepository.save(basket);

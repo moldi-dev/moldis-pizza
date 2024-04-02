@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/pizzas")
 public class PizzaController {
 
     private final PizzaService pizzaService;
@@ -18,43 +19,43 @@ public class PizzaController {
         this.pizzaService = pizzaService;
     }
 
-    @GetMapping("/getAllPizzas")
+    @GetMapping("")
     public ResponseEntity<List<PizzaDTO>> getAllPizzas() {
         return ResponseEntity.ok(pizzaService.getAllPizzas());
     }
 
-    @GetMapping("/getPizzaById/{id}")
+    @GetMapping("/get-pizza-by-id/{id}")
     public ResponseEntity<PizzaDTO> getPizzaById(@PathVariable Long id) {
         return ResponseEntity.ok(pizzaService.getPizzaById(id));
     }
 
-    @GetMapping("/getPizzaByPizzaName/{pizzaName}")
+    @GetMapping("/get-pizza-by-name/{pizzaName}")
     public ResponseEntity<PizzaDTO> getPizzaByPizzaName(@PathVariable String pizzaName) {
         return ResponseEntity.ok(pizzaService.getPizzaByPizzaName(pizzaName));
     }
 
-    @PostMapping("/addPizza")
+    @PostMapping("/add-pizza")
     public ResponseEntity<PizzaDTO> addPizza(@RequestBody Pizza pizza) {
         return ResponseEntity.ok(pizzaService.addPizza(pizza));
     }
 
-    @PostMapping("/updatePizzaById/{id}")
+    @PostMapping("/update-pizza-by-id/{id}")
     public ResponseEntity<PizzaDTO> updatePizzaById(@PathVariable Long id, @RequestBody Pizza newPizza) {
         return ResponseEntity.ok(pizzaService.updatePizzaById(id, newPizza));
     }
 
-    @PostMapping("/updatePizzaByPizzaName/{pizzaName}")
+    @PostMapping("/update-pizza-by-name/{pizzaName}")
     public ResponseEntity<PizzaDTO> updatePizzaByPizzaName(@PathVariable String pizzaName, @RequestBody Pizza newPizza) {
        return ResponseEntity.ok(pizzaService.updatePizzaByPizzaName(pizzaName, newPizza));
     }
 
-    @DeleteMapping("/deletePizzaById/{id}")
+    @DeleteMapping("/delete-pizza-by-id/{id}")
     public ResponseEntity<Void> deletePizzaById(@PathVariable Long id) {
         pizzaService.deletePizzaById(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @DeleteMapping("/deletePizzaByPizzaName/{pizzaName}")
+    @DeleteMapping("/delete-pizza-by-name/{pizzaName}")
     public ResponseEntity<Void> deletePizzaByPizzaName(@PathVariable String pizzaName) {
         pizzaService.deletePizzaByPizzaName(pizzaName);
         return new ResponseEntity<>(HttpStatus.OK);

@@ -1,4 +1,4 @@
-package org.moldidev.moldispizza.mapper;
+package org.moldidev.moldispizza.dto;
 
 import org.moldidev.moldispizza.dto.PizzaDTO;
 import org.moldidev.moldispizza.entity.Pizza;

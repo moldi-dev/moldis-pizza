@@ -1,6 +1,5 @@
-package org.moldidev.moldispizza.mapper;
+package org.moldidev.moldispizza.dto;
 
-import org.moldidev.moldispizza.dto.BasketDTO;
 import org.moldidev.moldispizza.entity.Basket;
 import org.springframework.stereotype.Service;
 
