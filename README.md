@@ -9,6 +9,7 @@ Welcome to Moldi's Pizza (backend only) application! This Spring Boot applicatio
 - User Management: Create, read, update, and delete users.
 - Basket Management: Users can add pizzas to their baskets.
 - Order Placement: Users can place orders from their baskets.
+- Pizza management: Create, read, update and delete pizzas.
 - Data Persistence: All the data is saved in a PostgreSQL database.
 
 
