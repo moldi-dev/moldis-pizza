@@ -113,15 +113,15 @@ public class UserService {
             String usernameRegex = "^[a-zA-Z0-9_]{8,50}$";
             String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,200}$";
 
-            if (!updatedUser.getUsername().matches(usernameRegex)) {
+            if (!(newUser.getUsername().matches(usernameRegex))) {
                 throw new InvalidArgumentException("the username must consist of alphanumeric characters and underscores only, with a length between 8 and 50 characters");
             }
 
-            else if (!updatedUser.getPassword().matches(passwordRegex)) {
+            else if (!(newUser.getPassword().matches(passwordRegex))) {
                 throw new InvalidArgumentException("the password must contain at least one lowercase letter, at least one uppercase letter, at least one digit, at least one special character and must be at least 8 characters long");
             }
 
-            else if (!updatedUser.getEmail().matches(emailRegex)) {
+            else if (!(newUser.getEmail().matches(emailRegex))) {
                 throw new InvalidArgumentException("the email must follow the standard 'example@example.example' format and must be at most 200 characters long");
             }
 
@@ -147,15 +147,15 @@ public class UserService {
             String usernameRegex = "^[a-zA-Z0-9_]{8,50}$";
             String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,200}$";
 
-            if (!updatedUser.getUsername().matches(usernameRegex)) {
+            if (!(newUser.getUsername().matches(usernameRegex))) {
                 throw new InvalidArgumentException("the username must consist of alphanumeric characters and underscores only, with a length between 8 and 50 characters");
             }
 
-            else if (!updatedUser.getPassword().matches(passwordRegex)) {
+            else if (!(newUser.getUsername().matches(passwordRegex))) {
                 throw new InvalidArgumentException("the password must contain at least one lowercase letter, at least one uppercase letter, at least one digit, at least one special character and must be at least 8 characters long");
             }
 
-            else if (!updatedUser.getEmail().matches(emailRegex)) {
+            else if (!(newUser.getUsername().matches(emailRegex))) {
                 throw new InvalidArgumentException("the email must follow the standard 'example@example.example' format and must be at most 200 characters long");
             }
 

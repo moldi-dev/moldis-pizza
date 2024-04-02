@@ -80,11 +80,11 @@ public class PizzaService {
         if (foundPizza.isPresent()) {
             Pizza updatedPizza = foundPizza.get();
 
-            if (updatedPizza.getName().length() > 100) {
+            if (newPizza.getName().length() > 100) {
                 throw new InvalidArgumentException("pizza's name must be at most 100 characters long");
             }
 
-            else if (updatedPizza.getPrice() <= 0) {
+            else if (newPizza.getPrice() <= 0) {
                 throw new InvalidArgumentException("pizza's price must be greater than 0");
             }
 
@@ -106,11 +106,11 @@ public class PizzaService {
         if (foundPizza.isPresent()) {
             Pizza updatedPizza = foundPizza.get();
 
-            if (updatedPizza.getName().length() > 100) {
+            if (newPizza.getName().length() > 100) {
                 throw new InvalidArgumentException("pizza's name must be at most 100 characters long");
             }
 
-            else if (updatedPizza.getPrice() <= 0) {
+            else if (newPizza.getPrice() <= 0) {
                 throw new InvalidArgumentException("pizza's price must be greater than 0");
             }
 
