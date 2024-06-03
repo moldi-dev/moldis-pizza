@@ -1,28 +1,37 @@
 package org.moldidev.moldispizza.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 
-@Entity
-@Setter
-@Getter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString
+import java.util.List;
+
 @Table(name = "pizzas")
+@Entity
+@Data
 public class Pizza {
 
+    @Column(name = "pizza_id")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long pizzaId;
 
-    @Column(name = "name", columnDefinition = "varchar(100) unique not null")
+    @Column(name = "name", unique = true)
+    @NotEmpty(message = "The pizza's name can't be empty")
+    @NotNull(message = "The pizza's name can't be null")
+    @NotBlank(message = "The pizza's name can't be blank")
     private String name;
 
-    @Column(name = "ingredients", columnDefinition = "text not null")
+    @ManyToMany(fetch = FetchType.EAGER)
+    private List<Image> images;
+
+    @Column(name = "ingredients")
     private String ingredients;
 
-    @Column(name = "price", columnDefinition = "double precision not null check(price > 0)")
-    private double price;
+    @Column(name = "price")
+    @DecimalMin(value = "0.0", inclusive = false, message = "The pizza's price must be positive")
+    private Double price;
 }

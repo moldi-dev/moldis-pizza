@@ -1,9 +1,10 @@
 package org.moldidev.moldispizza.dto;
 
-public record PizzaDTO(
-    Long id,
-    String name,
-    String ingredients,
-    double price
-) {
+import java.util.List;
+
+public record PizzaDTO(Long pizzaId,
+                       String name,
+                       List<ImageDTO> images,
+                       String ingredients,
+                       Double price) {
 }

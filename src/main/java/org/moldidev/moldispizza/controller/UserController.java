@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/v1/users")
 public class UserController {
     private final UserService userService;
 
@@ -18,45 +18,45 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("")
-    public ResponseEntity<List<UserDTO>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    @GetMapping("/find-all")
+    public ResponseEntity<List<UserDTO>> findAll() {
+        return ResponseEntity.ok(userService.findAll());
     }
 
-    @GetMapping("/get-user-by-id/{id}")
-    public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    @GetMapping("/find/id={user_id}")
+    public ResponseEntity<UserDTO> findById(@PathVariable("user_id") Long userId) {
+        return ResponseEntity.ok(userService.findById(userId));
     }
 
-    @GetMapping("/get-user-by-username/{username}")
-    public ResponseEntity<UserDTO> getUserByUsername(@PathVariable String username) {
-        return ResponseEntity.ok(userService.getUserByUsername(username));
+    @GetMapping("/find/username={username}")
+    public ResponseEntity<UserDTO> findByUsername(@PathVariable("username") String username) {
+        return ResponseEntity.ok(userService.findByUsername(username));
     }
 
-    @PostMapping("/add-user")
-    public ResponseEntity<UserDTO> addUser(@RequestBody User user) {
-       return ResponseEntity.ok(userService.addUser(user));
+    @PostMapping("/save")
+    public ResponseEntity<UserDTO> save(@RequestBody User user) {
+        return ResponseEntity.ok(userService.save(user));
     }
 
-    @PostMapping("/update-user-by-id/{id}")
-    public ResponseEntity<UserDTO> updateUserById(@PathVariable Long id, @RequestBody User newUser) {
-       return ResponseEntity.ok(userService.updateUserById(id, newUser));
+    @PostMapping("/update/id={user_id}")
+    public ResponseEntity<UserDTO> updateById(@PathVariable("user_id") Long userId, @RequestBody User user) {
+        return ResponseEntity.ok(userService.updateById(userId, user));
     }
 
-    @PostMapping("/update-user-by-username/{username}")
-    public ResponseEntity<UserDTO> updateUserByUsername(@PathVariable String username, @RequestBody User newUser) {
-        return ResponseEntity.ok(userService.updateUserByUsername(username, newUser));
+    @PostMapping("/update/username={username}")
+    public ResponseEntity<UserDTO> updateByUsername(@PathVariable("username") String username, @RequestBody User user) {
+        return ResponseEntity.ok(userService.updateByUsername(username, user));
     }
 
-    @DeleteMapping("/delete-user-by-id/{id}")
-    public ResponseEntity<Void> deleteUserById(@PathVariable Long id) {
-        userService.deleteUserById(id);
+    @DeleteMapping("/delete/id={user_id}")
+    public ResponseEntity<Void> deleteById(@PathVariable("user_id") Long userId) {
+        userService.deleteById(userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @DeleteMapping("/delete-user-by-username/{username}")
-    public ResponseEntity<Void> deleteUserByUsername(@PathVariable String username) {
-        userService.deleteUserByUsername(username);
+    @DeleteMapping("/delete/username={username}")
+    public ResponseEntity<Void> deleteByUsername(@PathVariable("username") String username) {
+        userService.deleteByUsername(username);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

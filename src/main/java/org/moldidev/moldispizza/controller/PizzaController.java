@@ -10,54 +10,53 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/pizzas")
+@RequestMapping("/api/v1/pizzas")
 public class PizzaController {
-
     private final PizzaService pizzaService;
 
     public PizzaController(PizzaService pizzaService) {
         this.pizzaService = pizzaService;
     }
 
-    @GetMapping("")
-    public ResponseEntity<List<PizzaDTO>> getAllPizzas() {
-        return ResponseEntity.ok(pizzaService.getAllPizzas());
+    @GetMapping("/find-all")
+    public ResponseEntity<List<PizzaDTO>> findAll() {
+        return ResponseEntity.ok(pizzaService.findAll());
     }
 
-    @GetMapping("/get-pizza-by-id/{id}")
-    public ResponseEntity<PizzaDTO> getPizzaById(@PathVariable Long id) {
-        return ResponseEntity.ok(pizzaService.getPizzaById(id));
+    @GetMapping("/find/id={pizza_id}")
+    public ResponseEntity<PizzaDTO> findById(@PathVariable("pizza_id") Long pizza_id) {
+        return ResponseEntity.ok(pizzaService.findById(pizza_id));
     }
 
-    @GetMapping("/get-pizza-by-name/{pizzaName}")
-    public ResponseEntity<PizzaDTO> getPizzaByPizzaName(@PathVariable String pizzaName) {
-        return ResponseEntity.ok(pizzaService.getPizzaByPizzaName(pizzaName));
+    @GetMapping("/find/name={name}")
+    public ResponseEntity<PizzaDTO> findByName(@PathVariable("name") String name) {
+        return ResponseEntity.ok(pizzaService.findByName(name));
     }
 
-    @PostMapping("/add-pizza")
-    public ResponseEntity<PizzaDTO> addPizza(@RequestBody Pizza pizza) {
-        return ResponseEntity.ok(pizzaService.addPizza(pizza));
+    @PostMapping("/save")
+    public ResponseEntity<PizzaDTO> save(@RequestBody Pizza pizza) {
+        return ResponseEntity.ok(pizzaService.save(pizza));
     }
 
-    @PostMapping("/update-pizza-by-id/{id}")
-    public ResponseEntity<PizzaDTO> updatePizzaById(@PathVariable Long id, @RequestBody Pizza newPizza) {
-        return ResponseEntity.ok(pizzaService.updatePizzaById(id, newPizza));
+    @PostMapping("/update/id={pizza_id}")
+    public ResponseEntity<PizzaDTO> updateById(@PathVariable("pizza_id") Long pizzaId, @RequestBody Pizza pizza) {
+        return ResponseEntity.ok(pizzaService.updateById(pizzaId, pizza));
     }
 
-    @PostMapping("/update-pizza-by-name/{pizzaName}")
-    public ResponseEntity<PizzaDTO> updatePizzaByPizzaName(@PathVariable String pizzaName, @RequestBody Pizza newPizza) {
-       return ResponseEntity.ok(pizzaService.updatePizzaByPizzaName(pizzaName, newPizza));
+    @PostMapping("/update/name={name}")
+    public ResponseEntity<PizzaDTO> updateByName(@PathVariable("name") String name, @RequestBody Pizza pizza) {
+        return ResponseEntity.ok(pizzaService.updateByName(name, pizza));
     }
 
-    @DeleteMapping("/delete-pizza-by-id/{id}")
-    public ResponseEntity<Void> deletePizzaById(@PathVariable Long id) {
-        pizzaService.deletePizzaById(id);
+    @DeleteMapping("/delete/id={pizza_id}")
+    public ResponseEntity<Void> deleteById(@PathVariable("pizza_id") Long pizzaId) {
+        pizzaService.deleteById(pizzaId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @DeleteMapping("/delete-pizza-by-name/{pizzaName}")
-    public ResponseEntity<Void> deletePizzaByPizzaName(@PathVariable String pizzaName) {
-        pizzaService.deletePizzaByPizzaName(pizzaName);
+    @DeleteMapping("/delete/name={name}")
+    public ResponseEntity<Void> deleteByName(@PathVariable("name") String name) {
+        pizzaService.deleteByName(name);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

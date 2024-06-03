@@ -1,39 +1,64 @@
 package org.moldidev.moldispizza.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import jakarta.validation.constraints.*;
+import lombok.Data;
+import org.moldidev.moldispizza.enumeration.Role;
 
-@Entity
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString
-@Getter
-@Setter
 @Table(name = "users")
+@Entity
+@Data
 public class User {
+    @Column(name = "user_id")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long userId;
 
-    @Column(name = "username", columnDefinition = "varchar(50) unique not null")
+    @Column(name = "username", unique = true)
+    @NotEmpty(message = "The username can't be empty")
+    @NotNull(message = "The username can't be null")
+    @NotBlank(message = "The username can't be blank")
+    @Size(min = 10, max = 100, message = "The username must contain at least 10 characters and at most 100 characters")
     private String username;
 
-    @Column(name = "password", columnDefinition = "text not null")
+    @ManyToOne
+    @JoinColumn(name = "imageId", referencedColumnName = "image_id")
+    private Image image;
+
+    @Column(name = "password")
+    @NotNull(message = "The password can't be null")
+    @NotEmpty(message = "The password can't be empty")
+    @NotBlank(message = "The password can't be blank")
     private String password;
 
-    @Column(name = "first_name", columnDefinition = "varchar(100) not null")
+    @Column(name = "first_name")
+    @NotNull(message = "The first name can't be null")
+    @NotEmpty(message = "The first name can't be empty")
+    @NotBlank(message = "The first name can't be blank")
+    @Size(max = 50, message = "The first name can contain at most 50 characters")
     private String firstName;
 
-    @Column(name = "last_name", columnDefinition = "varchar(100) not null")
+    @Column(name = "last_name")
+    @NotNull(message = "The last name can't be null")
+    @NotEmpty(message = "The last name can't be empty")
+    @NotBlank(message = "The last name can't be blank")
+    @Size(max = 50, message = "The last name can contain at most 50 characters")
     private String lastName;
 
-    @Column(name = "email", columnDefinition = "varchar(200) not null")
+    @Column(name = "email")
+    @Email(message = "The email must follow the pattern 'email@domain.com'")
     private String email;
 
-    @Column(name = "address", columnDefinition = "text not null")
+    @Column(name = "address")
+    @NotNull(message = "The address can't be null")
+    @NotEmpty(message = "The address can't be empty")
+    @NotBlank(message = "The address can't be blank")
     private String address;
 
-    @Column(name = "role", columnDefinition = "varchar(20) default 'CUSTOMER'")
-    private String role = "CUSTOMER";
+    @Column(name = "role")
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    @Column(name = "is_locked")
+    private Boolean isLocked;
 }

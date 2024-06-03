@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/baskets")
+@RequestMapping("/api/v1/baskets")
 public class BasketController {
     private final BasketService basketService;
 
@@ -18,96 +18,50 @@ public class BasketController {
         this.basketService = basketService;
     }
 
-    @GetMapping("")
-    public ResponseEntity<List<BasketDTO>> getAllBaskets() {
-        return ResponseEntity.ok(basketService.getAllBaskets());
+    @GetMapping("/find-all")
+    public ResponseEntity<List<BasketDTO>> findAll() {
+        return ResponseEntity.ok(basketService.findAll());
     }
 
-    @GetMapping("/get-basket-by-id/{id}")
-    public ResponseEntity<BasketDTO> getBasketById(@PathVariable Long id) {
-        return ResponseEntity.ok(basketService.getBasketById(id));
+    @GetMapping("/find/id={basket_id}")
+    public ResponseEntity<BasketDTO> findById(@PathVariable("basket_id") Long basketId) {
+        return ResponseEntity.ok(basketService.findById(basketId));
     }
 
-    @GetMapping("/get-basket-by-user-id/{id}")
-    public ResponseEntity<BasketDTO> getBasketByUserId(@PathVariable Long id) {
-        return ResponseEntity.ok(basketService.getBasketByUserId(id));
+    @GetMapping("/find/user-id={user_id}")
+    public ResponseEntity<BasketDTO> findByUserId(@PathVariable("user_id") Long userId) {
+        return ResponseEntity.ok(basketService.findByUserId(userId));
     }
 
-    @GetMapping("/get-basket-by-username/{username}")
-    public ResponseEntity<BasketDTO> getBasketByUsername(@PathVariable String username) {
-        return ResponseEntity.ok(basketService.getBasketByUsername(username));
+    @GetMapping("/add-pizza/user-id={user_id}/pizza_id={pizza_id}")
+    public ResponseEntity<BasketDTO> addPizza(@PathVariable("user_id") Long userId, @PathVariable("pizza_id") Long pizzaId) {
+        return ResponseEntity.ok(basketService.addPizzaToUserBasketByPizzaIdAndUserId(pizzaId, userId));
     }
 
-    @GetMapping("/get-basket-total-price-by-user-id/{id}")
-    public ResponseEntity<Double> getBasketTotalPriceByUserId(@PathVariable Long id) {
-        return ResponseEntity.ok(basketService.getBasketTotalPriceByUserId(id));
+    @GetMapping("/remove-pizza/user-id={user_id}/pizza_id={pizza_id}")
+    public ResponseEntity<BasketDTO> removePizza(@PathVariable("user_id") Long userId, @PathVariable("pizza_id") Long pizzaId) {
+        return ResponseEntity.ok(basketService.removePizzaFromUserBasketByPizzaIdAndUserId(pizzaId, userId));
     }
 
-    @GetMapping("/get-basket-total-price-by-username/{username}")
-    public ResponseEntity<Double> getBasketTotalPriceByUsername(@PathVariable String username) {
-        return ResponseEntity.ok(basketService.getBasketTotalPriceByUsername(username));
+    @PostMapping("/save")
+    public ResponseEntity<BasketDTO> save(@RequestBody Basket basket) {
+        return ResponseEntity.ok(basketService.save(basket));
     }
 
-    @PostMapping("/add-basket")
-    public ResponseEntity<BasketDTO> addBasket(@RequestBody Basket basket) {
-        return ResponseEntity.ok(basketService.addBasket(basket));
+    @PostMapping("/update/id={basket_id}")
+    public ResponseEntity<BasketDTO> updateById(@PathVariable("basket_id") Long basketId, @RequestBody  Basket basket) {
+        return ResponseEntity.ok(basketService.updateById(basketId, basket));
     }
 
-    @PostMapping("/add-pizza-to-basket-by-basket-id-and-pizza-id/{basketId}/{pizzaId}")
-    public ResponseEntity<BasketDTO> addPizzaToBasketByBasketIdAndPizzaId(@PathVariable Long basketId, @PathVariable Long pizzaId) {
-        return ResponseEntity.ok(basketService.addPizzaToBasketByBasketIdAndPizzaId(basketId, pizzaId));
-    }
-
-    @PostMapping("add-pizza-to-basket-by-user-id-and-pizza-id/{userId}/{pizzaId}")
-    public ResponseEntity<BasketDTO> addPizzaToBasketByUserIdAndPizzaId(@PathVariable Long userId, @PathVariable Long pizzaId) {
-        return ResponseEntity.ok(basketService.addPizzaToBasketByUserIdAndPizzaId(userId, pizzaId));
-    }
-
-    @PostMapping("/update-basket-by-id/{id}")
-    public ResponseEntity<BasketDTO> updateBasketById(@PathVariable Long id, @RequestBody Basket newBasket) {
-        return ResponseEntity.ok(basketService.updateBasketById(id, newBasket));
-    }
-
-    @PostMapping("/update-basket-by-user-id/{id}")
-    public ResponseEntity<BasketDTO> updateBasketByUserId(@PathVariable Long id, @RequestBody Basket newBasket) {
-        return ResponseEntity.ok(basketService.updateBasketByUserId(id, newBasket));
-    }
-
-    @PostMapping("/update-basket-by-username/{username}")
-    public ResponseEntity<BasketDTO> updateBasketByUsername(@PathVariable String username, @RequestBody Basket newBasket) {
-        return ResponseEntity.ok(basketService.updateBasketByUsername(username, newBasket));
-    }
-
-    @PostMapping("/delete-pizza-from-basket-by-basket-id-and-pizza-id/{basketId}/{pizzaId}")
-    public ResponseEntity<BasketDTO> deletePizzaFromBasketByBasketIdAndPizzaId(@PathVariable Long basketId, @PathVariable Long pizzaId) {
-        return ResponseEntity.ok(basketService.deletePizzaFromBasketByBasketIdAndPizzaId(basketId, pizzaId));
-    }
-
-    @PostMapping("/delete-pizza-from-basket-by-user-id-and-pizza-id/{userId}/{pizzaId}")
-    public ResponseEntity<BasketDTO> deletePizzaFromBasketByUserIdAndPizzaId(@PathVariable Long userId, @PathVariable Long pizzaId) {
-        return ResponseEntity.ok(basketService.deletePizzaFromBasketByUserIdAndPizzaId(userId, pizzaId));
-    }
-
-    @PostMapping("/delete-pizza-from-basket-by-username-and-pizza-id/{username}/{pizzaId}")
-    public ResponseEntity<BasketDTO> deletePizzaFromBasketByUsernameAndPizzaId(@PathVariable String username, @PathVariable Long pizzaId) {
-        return ResponseEntity.ok(basketService.deletePizzaFromBasketByUsernameAndPizzaId(username, pizzaId));
-    }
-
-    @DeleteMapping("/delete-basket-by-id/{id}")
-    public ResponseEntity<Void> deleteBasketById(@PathVariable Long id) {
-        basketService.deleteBasketById(id);
+    @DeleteMapping("/delete/id={basket_id}")
+    public ResponseEntity<Void> deleteById(@PathVariable("basket_id") Long basketId) {
+        basketService.deleteById(basketId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @DeleteMapping("/delete-basket-by-user-id/{id}")
-    public ResponseEntity<Void> deleteBasketByUserId(@PathVariable Long id) {
-        basketService.deleteBasketByUserId(id);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @DeleteMapping("/delete-basket-by-username/{username}")
-    public ResponseEntity<Void> deleteBasketByUsername(@PathVariable String username) {
-        basketService.deleteBasketByUsername(username);
+    @DeleteMapping("/delete/user-id={user_id}")
+    public ResponseEntity<Void> deleteByUserId(@PathVariable("user_id") Long userId) {
+        basketService.deleteByUserId(userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

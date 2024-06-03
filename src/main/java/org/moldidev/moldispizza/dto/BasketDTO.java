@@ -1,12 +1,9 @@
 package org.moldidev.moldispizza.dto;
 
-import org.moldidev.moldispizza.entity.Pizza;
-
 import java.util.List;
 
-public record BasketDTO(
-        Long id,
-        UserDTO userDTO,
-        List<Pizza> pizzaList
-) {
+public record BasketDTO(Long basketId,
+                        UserDTO user,
+                        Double totalPrice,
+                        List<PizzaDTO> pizzas) {
 }
