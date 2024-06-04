@@ -1,7 +1,6 @@
 package org.moldidev.moldispizza.mapper;
 
 import org.moldidev.moldispizza.dto.UserDTO;
-import org.moldidev.moldispizza.entity.Image;
 import org.moldidev.moldispizza.entity.User;
 import org.springframework.stereotype.Service;
 

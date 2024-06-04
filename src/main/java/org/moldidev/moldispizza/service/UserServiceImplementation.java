@@ -2,8 +2,8 @@ package org.moldidev.moldispizza.service;
 
 import org.moldidev.moldispizza.dto.UserDTO;
 import org.moldidev.moldispizza.entity.Basket;
-import org.moldidev.moldispizza.enumeration.Role;
 import org.moldidev.moldispizza.entity.User;
+import org.moldidev.moldispizza.enumeration.Role;
 import org.moldidev.moldispizza.exception.InvalidArgumentException;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
@@ -68,10 +68,12 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public User authenticate(String username, String password) {
+        User foundUser = userRepository.findByUsername(username)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found by username " + username));
+
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new InvalidArgumentException("Invalid username or password"));
+        return foundUser;
     }
 
     @Override

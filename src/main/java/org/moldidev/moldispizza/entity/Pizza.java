@@ -25,7 +25,7 @@ public class Pizza {
     @NotBlank(message = "The pizza's name can't be blank")
     private String name;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<Image> images;
 
     @Column(name = "ingredients")

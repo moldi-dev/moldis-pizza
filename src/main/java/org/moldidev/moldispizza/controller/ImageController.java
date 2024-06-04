@@ -1,6 +1,5 @@
 package org.moldidev.moldispizza.controller;
 
-import org.apache.coyote.Response;
 import org.moldidev.moldispizza.dto.ImageDTO;
 import org.moldidev.moldispizza.entity.Image;
 import org.moldidev.moldispizza.service.ImageService;

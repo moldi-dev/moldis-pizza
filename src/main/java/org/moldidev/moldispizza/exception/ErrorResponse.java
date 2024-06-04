@@ -11,7 +11,7 @@ import java.util.Date;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ErrorMessage {
+public class ErrorResponse {
     private Integer errorCode;
     private Date createdAt;
     private String errorMessage;

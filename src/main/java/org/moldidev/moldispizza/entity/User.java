@@ -27,7 +27,7 @@ public class User implements UserDetails {
     @Size(min = 10, max = 100, message = "The username must contain at least 10 characters and at most 100 characters")
     private String username;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "imageId", referencedColumnName = "image_id")
     private Image image;
 
