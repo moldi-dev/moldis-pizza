@@ -33,6 +33,11 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.findAllByUserId(userId));
     }
 
+    @GetMapping("/find-all/pizza-id={pizza_id}")
+    public ResponseEntity<List<ReviewDTO>> findAllByPizzaId(@PathVariable("pizza_id") Long pizzaId) {
+        return ResponseEntity.ok(reviewService.findAllByPizzaId(pizzaId));
+    }
+
     @PostMapping("/save")
     public ResponseEntity<ReviewDTO> save(@RequestBody Review review) {
         return ResponseEntity.ok(reviewService.save(review));

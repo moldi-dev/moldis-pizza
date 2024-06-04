@@ -12,6 +12,8 @@ import java.util.List;
 public interface UserService {
     UserDTO save(User user);
 
+    User authenticate(String username, String password);
+
     UserDTO findById(Long userId);
     UserDTO findByUsername(String username);
     List<UserDTO> findAll();

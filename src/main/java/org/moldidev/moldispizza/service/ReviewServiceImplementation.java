@@ -79,6 +79,20 @@ public class ReviewServiceImplementation implements ReviewService {
     }
 
     @Override
+    public List<ReviewDTO> findAllByPizzaId(Long pizzaId) {
+        List<Review> reviews = reviewRepository.findAllByPizzaPizzaId(pizzaId);
+
+        if (reviews.isEmpty()) {
+            throw new ResourceNotFoundException("No reviews found by pizza id " + pizzaId);
+        }
+
+        return reviews
+                .stream()
+                .map(reviewDTOMapper::apply)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public ReviewDTO updateById(Long reviewId, Review updatedReview) {
         Review foundReview = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("No review found by id " + reviewId));

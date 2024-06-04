@@ -10,4 +10,5 @@ import java.util.List;
 public interface ReviewRepository extends JpaRepository<Review, Long> {
     Long countReviewsByUserUserIdAndPizzaPizzaId(Long userId, Long pizzaId);
     List<Review> findAllByUserUserId(Long userId);
+    List<Review> findAllByPizzaPizzaId(Long pizzaId);
 }

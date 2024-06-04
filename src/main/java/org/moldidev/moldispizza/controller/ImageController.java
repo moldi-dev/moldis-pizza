@@ -1,5 +1,6 @@
 package org.moldidev.moldispizza.controller;
 
+import org.apache.coyote.Response;
 import org.moldidev.moldispizza.dto.ImageDTO;
 import org.moldidev.moldispizza.entity.Image;
 import org.moldidev.moldispizza.service.ImageService;
@@ -31,14 +32,34 @@ public class ImageController {
         return ResponseEntity.ok(imageService.findAllByType(type));
     }
 
+    @GetMapping("/find-all/pizza-id={pizza_id}")
+    public ResponseEntity<List<ImageDTO>> findAllByPizzaId(@PathVariable("pizza_id") Long pizzaId) {
+        return ResponseEntity.ok(imageService.findAllByPizzaId(pizzaId));
+    }
+
     @GetMapping("/find/id={image_id}")
     public ResponseEntity<ImageDTO> findById(@PathVariable("image_id") Long imageId) {
         return ResponseEntity.ok(imageService.findById(imageId));
     }
 
+    @GetMapping("/find/user-id={user_id}")
+    public ResponseEntity<ImageDTO> findByUserId(@PathVariable("user_id") Long userId) {
+        return ResponseEntity.ok(imageService.findByUserId(userId));
+    }
+
     @GetMapping("/find/id={image_id}/see-image")
     public ResponseEntity<byte[]> findByIdAndSee(@PathVariable("image_id") Long imageId) {
         Image image = imageService.findImageEntityById(imageId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_JPEG);
+
+        return new ResponseEntity<>(image.getData(), headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/find/user-id={user_id}/see-image")
+    public ResponseEntity<byte[]> findByUserIdAndSee(@PathVariable("user_id") Long userId) {
+        Image image = imageService.findImageEntityById(userId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_JPEG);
@@ -64,6 +85,11 @@ public class ImageController {
     @PostMapping("/update/name={name}")
     public ResponseEntity<ImageDTO> updateByName(@PathVariable("name") String name, @RequestBody MultipartFile image) {
         return ResponseEntity.ok(imageService.updateByName(name, image));
+    }
+
+    @PostMapping("/update/user-id={user_id}")
+    public ResponseEntity<ImageDTO> updateByUserId(@PathVariable("user_id") Long userId, @RequestBody MultipartFile image) {
+        return ResponseEntity.ok(imageService.updateByUserId(userId, image));
     }
 
     @DeleteMapping("/delete/id={image_id}")

@@ -15,6 +15,7 @@ public interface ReviewService {
     ReviewDTO findById(Long reviewId);
     List<ReviewDTO> findAll();
     List<ReviewDTO> findAllByUserId(Long userId);
+    List<ReviewDTO> findAllByPizzaId(Long pizzaId);
 
     ReviewDTO updateById(Long reviewId, Review updatedReview);
 

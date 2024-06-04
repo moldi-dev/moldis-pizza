@@ -16,11 +16,14 @@ public interface ImageService {
     ImageDTO findById(Long imageId);
     Image findImageEntityById(Long imageId);
     ImageDTO findByName(String name);
+    ImageDTO findByUserId(Long userId);
     List<ImageDTO> findAll();
     List<ImageDTO> findAllByType(String type);
+    List<ImageDTO> findAllByPizzaId(Long pizzaId);
 
     ImageDTO updateById(Long imageId, MultipartFile image);
     ImageDTO updateByName(String name, MultipartFile image);
+    ImageDTO updateByUserId(Long userId, MultipartFile image);
 
     void deleteById(Long imageId);
     void deleteByName(String name);

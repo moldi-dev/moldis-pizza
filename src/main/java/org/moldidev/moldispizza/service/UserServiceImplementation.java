@@ -10,6 +10,8 @@ import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.UserDTOMapper;
 import org.moldidev.moldispizza.repository.BasketRepository;
 import org.moldidev.moldispizza.repository.UserRepository;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,11 +27,13 @@ public class UserServiceImplementation implements UserService {
     private final UserRepository userRepository;
     private final UserDTOMapper userDTOMapper;
     private final BasketRepository basketRepository;
+    private final AuthenticationManager authenticationManager;
 
-    public UserServiceImplementation(UserRepository userRepository, UserDTOMapper userDTOMapper, BasketRepository basketRepository) {
+    public UserServiceImplementation(UserRepository userRepository, UserDTOMapper userDTOMapper, BasketRepository basketRepository, AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.userDTOMapper = userDTOMapper;
         this.basketRepository = basketRepository;
+        this.authenticationManager = authenticationManager;
     }
 
     @Override
@@ -60,6 +64,14 @@ public class UserServiceImplementation implements UserService {
         }
 
         return null;
+    }
+
+    @Override
+    public User authenticate(String username, String password) {
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new InvalidArgumentException("Invalid username or password"));
     }
 
     @Override
@@ -106,8 +118,23 @@ public class UserServiceImplementation implements UserService {
             foundUser.setLastName(updatedUser.getLastName());
             foundUser.setEmail(updatedUser.getEmail());
             foundUser.setAddress(updatedUser.getAddress());
-            foundUser.setRole(updatedUser.getRole());
-            foundUser.setIsLocked(updatedUser.getIsLocked());
+
+            if (updatedUser.getRole() != null) {
+                foundUser.setRole(updatedUser.getRole());
+            }
+
+            else {
+                foundUser.setRole(Role.CUSTOMER);
+            }
+
+
+            if (updatedUser.getIsLocked() != null) {
+                foundUser.setIsLocked(updatedUser.getIsLocked());
+            }
+
+            else {
+                foundUser.setIsLocked(false);
+            }
 
             return userDTOMapper.apply(userRepository.save(foundUser));
         }
@@ -129,8 +156,23 @@ public class UserServiceImplementation implements UserService {
             foundUser.setLastName(updatedUser.getLastName());
             foundUser.setEmail(updatedUser.getEmail());
             foundUser.setAddress(updatedUser.getAddress());
-            foundUser.setRole(updatedUser.getRole());
-            foundUser.setIsLocked(updatedUser.getIsLocked());
+
+            if (updatedUser.getRole() != null) {
+                foundUser.setRole(updatedUser.getRole());
+            }
+
+            else {
+                foundUser.setRole(Role.CUSTOMER);
+            }
+
+
+            if (updatedUser.getIsLocked() != null) {
+                foundUser.setIsLocked(updatedUser.getIsLocked());
+            }
+
+            else {
+                foundUser.setIsLocked(false);
+            }
 
             return userDTOMapper.apply(userRepository.save(foundUser));
         }
