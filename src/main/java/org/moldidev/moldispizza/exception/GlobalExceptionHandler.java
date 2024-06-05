@@ -28,8 +28,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(message, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(InvalidArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidArgumentException(InvalidArgumentException exception, WebRequest request) {
+    @ExceptionHandler(InvalidInputException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidArgumentException(InvalidInputException exception, WebRequest request) {
         ErrorResponse message = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 new Date(),

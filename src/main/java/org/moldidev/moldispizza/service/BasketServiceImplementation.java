@@ -4,7 +4,7 @@ import org.moldidev.moldispizza.dto.BasketDTO;
 import org.moldidev.moldispizza.entity.Basket;
 import org.moldidev.moldispizza.entity.Pizza;
 import org.moldidev.moldispizza.entity.User;
-import org.moldidev.moldispizza.exception.InvalidArgumentException;
+import org.moldidev.moldispizza.exception.InvalidInputException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.BasketDTOMapper;
 import org.moldidev.moldispizza.repository.BasketRepository;
@@ -33,11 +33,9 @@ public class BasketServiceImplementation implements BasketService {
 
     @Override
     public BasketDTO save(Basket basket) {
-        if (checkIfBasketIsValid(basket)) {
-            return basketDTOMapper.apply(basketRepository.save(basket));
-        }
+        checkIfBasketIsValid(basket);
 
-        return null;
+        return basketDTOMapper.apply(basketRepository.save(basket));
     }
 
     @Override
@@ -92,15 +90,13 @@ public class BasketServiceImplementation implements BasketService {
         Basket foundBasket = basketRepository.findById(basketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Basket not found by id " + basketId));
 
-        if (checkIfBasketIsValid(updatedBasket)) {
-            foundBasket.setPizzas(updatedBasket.getPizzas());
-            foundBasket.setUser(updatedBasket.getUser());
-            foundBasket.setTotalPrice(updatedBasket.getTotalPrice());
+        checkIfBasketIsValid(updatedBasket);
 
-            return basketDTOMapper.apply(basketRepository.save(foundBasket));
-        }
+        foundBasket.setPizzas(updatedBasket.getPizzas());
+        foundBasket.setUser(updatedBasket.getUser());
+        foundBasket.setTotalPrice(updatedBasket.getTotalPrice());
 
-        return null;
+        return basketDTOMapper.apply(basketRepository.save(foundBasket));
     }
 
     @Override
@@ -140,23 +136,21 @@ public class BasketServiceImplementation implements BasketService {
         basketRepository.delete(foundBasket);
     }
 
-    private boolean checkIfBasketIsValid(Basket basket) {
+    private void checkIfBasketIsValid(Basket basket) {
         if (basket.getUser() == null) {
-            throw new InvalidArgumentException("The user can't be null");
+            throw new InvalidInputException("The user can't be null");
         }
 
         else if (basket.getTotalPrice() == null) {
-            throw new InvalidArgumentException("The total price can't be null");
+            throw new InvalidInputException("The total price can't be null");
         }
 
         else if (basket.getTotalPrice() < 0) {
-            throw new InvalidArgumentException("The total price must be positive");
+            throw new InvalidInputException("The total price must be positive");
         }
 
         else if (basket.getPizzas() == null) {
-            throw new InvalidArgumentException("The pizza list can't be null");
+            throw new InvalidInputException("The pizza list can't be null");
         }
-
-        return true;
     }
 }

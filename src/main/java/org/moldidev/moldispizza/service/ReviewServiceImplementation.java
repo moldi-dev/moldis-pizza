@@ -2,7 +2,7 @@ package org.moldidev.moldispizza.service;
 
 import org.moldidev.moldispizza.dto.ReviewDTO;
 import org.moldidev.moldispizza.entity.Review;
-import org.moldidev.moldispizza.exception.InvalidArgumentException;
+import org.moldidev.moldispizza.exception.InvalidInputException;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.ReviewDTOMapper;
@@ -28,18 +28,16 @@ public class ReviewServiceImplementation implements ReviewService {
 
     @Override
     public ReviewDTO save(Review review) {
-        if (checkIfReviewIsValid(review)) {
-            boolean hasUserAlreadyReviewedThePizza = reviewRepository
-                    .countReviewsByUserUserIdAndPizzaPizzaId(review.getUser().getUserId(), review.getPizza().getPizzaId()) > 0;
+        checkIfReviewIsValid(review);
 
-            if (hasUserAlreadyReviewedThePizza) {
-                throw new ResourceAlreadyExistsException("User " + review.getUser().getUsername() + " already reviewed the pizza " + review.getPizza().getName());
-            }
+        boolean hasUserAlreadyReviewedThePizza = reviewRepository
+                .countReviewsByUserUserIdAndPizzaPizzaId(review.getUser().getUserId(), review.getPizza().getPizzaId()) > 0;
 
-            return reviewDTOMapper.apply(reviewRepository.save(review));
+        if (hasUserAlreadyReviewedThePizza) {
+            throw new ResourceAlreadyExistsException("User " + review.getUser().getUsername() + " already reviewed the pizza " + review.getPizza().getName());
         }
 
-        return null;
+        return reviewDTOMapper.apply(reviewRepository.save(review));
     }
 
     @Override
@@ -94,19 +92,17 @@ public class ReviewServiceImplementation implements ReviewService {
 
     @Override
     public ReviewDTO updateById(Long reviewId, Review updatedReview) {
+        checkIfReviewIsValid(updatedReview);
+
         Review foundReview = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("No review found by id " + reviewId));
 
-        if (checkIfReviewIsValid(updatedReview)) {
-            foundReview.setPizza(updatedReview.getPizza());
-            foundReview.setUser(updatedReview.getUser());
-            foundReview.setRating(updatedReview.getRating());
-            foundReview.setComment(updatedReview.getComment());
+        foundReview.setPizza(updatedReview.getPizza());
+        foundReview.setUser(updatedReview.getUser());
+        foundReview.setRating(updatedReview.getRating());
+        foundReview.setComment(updatedReview.getComment());
 
-            return reviewDTOMapper.apply(reviewRepository.save(foundReview));
-        }
-
-        return null;
+        return reviewDTOMapper.apply(reviewRepository.save(foundReview));
     }
 
     @Override
@@ -128,27 +124,25 @@ public class ReviewServiceImplementation implements ReviewService {
         reviewRepository.deleteAll(reviews);
     }
 
-    private boolean checkIfReviewIsValid(Review review) {
+    private void checkIfReviewIsValid(Review review) {
         if (review.getUser() == null) {
-            throw new InvalidArgumentException("The user can't be null");
+            throw new InvalidInputException("The user can't be null");
         }
 
         else if (review.getRating() == null) {
-            throw new InvalidArgumentException("The rating can't be null");
+            throw new InvalidInputException("The rating can't be null");
         }
 
         else if (review.getRating() < 1) {
-            throw new InvalidArgumentException("The minimum rating allowed is 1 star");
+            throw new InvalidInputException("The minimum rating allowed is 1 star");
         }
 
         else if (review.getRating() > 5) {
-            throw new InvalidArgumentException("The maximum rating allowed is 5 stars");
+            throw new InvalidInputException("The maximum rating allowed is 5 stars");
         }
 
         else if (review.getPizza() == null) {
-            throw new InvalidArgumentException("The pizza can't be null");
+            throw new InvalidInputException("The pizza can't be null");
         }
-
-        return true;
     }
 }

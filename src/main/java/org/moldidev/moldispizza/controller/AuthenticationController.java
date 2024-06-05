@@ -4,7 +4,7 @@ import org.moldidev.moldispizza.dto.UserDTO;
 import org.moldidev.moldispizza.entity.User;
 import org.moldidev.moldispizza.service.JWTService;
 import org.moldidev.moldispizza.service.UserService;
-import org.moldidev.moldispizza.utility.LoginResponse;
+import org.moldidev.moldispizza.utility.AuthenticationResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,7 +30,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/sign-in")
-    public ResponseEntity<LoginResponse> authenticate(@RequestBody Map<String, String> credentials) {
+    public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody Map<String, String> credentials) {
         String username = credentials.get("username");
         String password = credentials.get("password");
 
@@ -39,8 +39,8 @@ public class AuthenticationController {
         String jwtToken = jwtService.generateToken(authenticatedUser);
         Long expiresIn = jwtService.getExpirationTime();
 
-        LoginResponse loginResponse = new LoginResponse(username, jwtToken, expiresIn);
+        AuthenticationResponse authenticationResponse = new AuthenticationResponse(username, jwtToken, expiresIn);
 
-        return ResponseEntity.ok(loginResponse);
+        return ResponseEntity.ok(authenticationResponse);
     }
 }

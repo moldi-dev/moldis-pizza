@@ -4,7 +4,7 @@ import org.moldidev.moldispizza.dto.UserDTO;
 import org.moldidev.moldispizza.entity.Basket;
 import org.moldidev.moldispizza.entity.User;
 import org.moldidev.moldispizza.enumeration.Role;
-import org.moldidev.moldispizza.exception.InvalidArgumentException;
+import org.moldidev.moldispizza.exception.InvalidInputException;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.UserDTOMapper;
@@ -44,26 +44,24 @@ public class UserServiceImplementation implements UserService {
             throw new ResourceAlreadyExistsException("User " + user.getUsername() + " already exists");
         }
 
-        if (checkIfUserIsValid(user)) {
-            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        checkIfUserIsValid(user);
 
-            user.setPassword(encoder.encode(user.getPassword()));
-            user.setRole(Role.CUSTOMER);
-            user.setIsLocked(false);
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-            User savedUser = userRepository.save(user);
+        user.setPassword(encoder.encode(user.getPassword()));
+        user.setRole(Role.CUSTOMER);
+        user.setIsLocked(false);
 
-            Basket basket = new Basket();
-            basket.setUser(user);
-            basket.setTotalPrice(0.0);
-            basket.setPizzas(new ArrayList<>());
+        User savedUser = userRepository.save(user);
 
-            basketRepository.save(basket);
+        Basket basket = new Basket();
+        basket.setUser(user);
+        basket.setTotalPrice(0.0);
+        basket.setPizzas(new ArrayList<>());
 
-            return userDTOMapper.apply(savedUser);
-        }
+        basketRepository.save(basket);
 
-        return null;
+        return userDTOMapper.apply(savedUser);
     }
 
     @Override
@@ -111,37 +109,35 @@ public class UserServiceImplementation implements UserService {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found by user id " + userId));
 
-        if (checkIfUserIsValid(updatedUser)) {
-            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        checkIfUserIsValid(updatedUser);
 
-            foundUser.setPassword(encoder.encode(updatedUser.getPassword()));
-            foundUser.setImage(updatedUser.getImage());
-            foundUser.setFirstName(updatedUser.getFirstName());
-            foundUser.setLastName(updatedUser.getLastName());
-            foundUser.setEmail(updatedUser.getEmail());
-            foundUser.setAddress(updatedUser.getAddress());
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-            if (updatedUser.getRole() != null) {
-                foundUser.setRole(updatedUser.getRole());
-            }
+        foundUser.setPassword(encoder.encode(updatedUser.getPassword()));
+        foundUser.setImage(updatedUser.getImage());
+        foundUser.setFirstName(updatedUser.getFirstName());
+        foundUser.setLastName(updatedUser.getLastName());
+        foundUser.setEmail(updatedUser.getEmail());
+        foundUser.setAddress(updatedUser.getAddress());
 
-            else {
-                foundUser.setRole(Role.CUSTOMER);
-            }
-
-
-            if (updatedUser.getIsLocked() != null) {
-                foundUser.setIsLocked(updatedUser.getIsLocked());
-            }
-
-            else {
-                foundUser.setIsLocked(false);
-            }
-
-            return userDTOMapper.apply(userRepository.save(foundUser));
+        if (updatedUser.getRole() != null) {
+            foundUser.setRole(updatedUser.getRole());
         }
 
-        return null;
+        else {
+            foundUser.setRole(Role.CUSTOMER);
+        }
+
+
+        if (updatedUser.getIsLocked() != null) {
+            foundUser.setIsLocked(updatedUser.getIsLocked());
+        }
+
+        else {
+            foundUser.setIsLocked(false);
+        }
+
+        return userDTOMapper.apply(userRepository.save(foundUser));
     }
 
     @Override
@@ -149,37 +145,35 @@ public class UserServiceImplementation implements UserService {
         User foundUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found by username " + username));
 
-        if (checkIfUserIsValid(updatedUser)) {
-            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        checkIfUserIsValid(updatedUser);
 
-            foundUser.setPassword(encoder.encode(updatedUser.getPassword()));
-            foundUser.setImage(updatedUser.getImage());
-            foundUser.setFirstName(updatedUser.getFirstName());
-            foundUser.setLastName(updatedUser.getLastName());
-            foundUser.setEmail(updatedUser.getEmail());
-            foundUser.setAddress(updatedUser.getAddress());
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-            if (updatedUser.getRole() != null) {
-                foundUser.setRole(updatedUser.getRole());
-            }
+        foundUser.setPassword(encoder.encode(updatedUser.getPassword()));
+        foundUser.setImage(updatedUser.getImage());
+        foundUser.setFirstName(updatedUser.getFirstName());
+        foundUser.setLastName(updatedUser.getLastName());
+        foundUser.setEmail(updatedUser.getEmail());
+        foundUser.setAddress(updatedUser.getAddress());
 
-            else {
-                foundUser.setRole(Role.CUSTOMER);
-            }
-
-
-            if (updatedUser.getIsLocked() != null) {
-                foundUser.setIsLocked(updatedUser.getIsLocked());
-            }
-
-            else {
-                foundUser.setIsLocked(false);
-            }
-
-            return userDTOMapper.apply(userRepository.save(foundUser));
+        if (updatedUser.getRole() != null) {
+            foundUser.setRole(updatedUser.getRole());
         }
 
-        return null;
+        else {
+            foundUser.setRole(Role.CUSTOMER);
+        }
+
+
+        if (updatedUser.getIsLocked() != null) {
+            foundUser.setIsLocked(updatedUser.getIsLocked());
+        }
+
+        else {
+            foundUser.setIsLocked(false);
+        }
+
+        return userDTOMapper.apply(userRepository.save(foundUser));
     }
 
     @Override
@@ -206,87 +200,85 @@ public class UserServiceImplementation implements UserService {
         userRepository.delete(foundUser);
     }
 
-    private boolean checkIfUserIsValid(User user) {
+    private void checkIfUserIsValid(User user) {
         if (user.getUsername() == null) {
-            throw new InvalidArgumentException("The username can't be null");
+            throw new InvalidInputException("The username can't be null");
         }
 
         else if (user.getUsername().isEmpty()) {
-            throw new InvalidArgumentException("The username can't be empty");
+            throw new InvalidInputException("The username can't be empty");
         }
 
         else if (user.getUsername().isBlank()) {
-            throw new InvalidArgumentException("The username can't be blank");
+            throw new InvalidInputException("The username can't be blank");
         }
 
         else if (user.getUsername().length() < 10 || user.getUsername().length() > 100) {
-            throw new InvalidArgumentException("The username must contain at least 10 characters and at most 100 characters");
+            throw new InvalidInputException("The username must contain at least 10 characters and at most 100 characters");
         }
 
         else if (user.getPassword() == null) {
-            throw new InvalidArgumentException("The password can't be null");
+            throw new InvalidInputException("The password can't be null");
         }
 
         else if (user.getPassword().isEmpty()) {
-            throw new InvalidArgumentException("The password can't be empty");
+            throw new InvalidInputException("The password can't be empty");
         }
 
         else if (user.getPassword().isBlank()) {
-            throw new InvalidArgumentException("The password can't be blank");
+            throw new InvalidInputException("The password can't be blank");
         }
 
         else if (user.getFirstName() == null) {
-            throw new InvalidArgumentException("The first name can't be null");
+            throw new InvalidInputException("The first name can't be null");
         }
 
         else if (user.getFirstName().isEmpty()) {
-            throw new InvalidArgumentException("The first name can't be empty");
+            throw new InvalidInputException("The first name can't be empty");
         }
 
         else if (user.getFirstName().isBlank()) {
-            throw new InvalidArgumentException("The first name can't be blank");
+            throw new InvalidInputException("The first name can't be blank");
         }
 
         else if (user.getFirstName().length() > 50) {
-            throw new InvalidArgumentException("The first name can contain at most than 50 characters");
+            throw new InvalidInputException("The first name can contain at most than 50 characters");
         }
 
         else if (user.getLastName() == null) {
-            throw new InvalidArgumentException("The last name can't be null");
+            throw new InvalidInputException("The last name can't be null");
         }
 
         else if (user.getLastName().isEmpty()) {
-            throw new InvalidArgumentException("The last name can't be empty");
+            throw new InvalidInputException("The last name can't be empty");
         }
 
         else if (user.getLastName().isBlank()) {
-            throw new InvalidArgumentException("The last name can't be blank");
+            throw new InvalidInputException("The last name can't be blank");
         }
 
         else if (user.getLastName().length() > 50) {
-            throw new InvalidArgumentException("The last name can contain at most 50 characters");
+            throw new InvalidInputException("The last name can contain at most 50 characters");
         }
 
         else if (user.getEmail() == null) {
-            throw new InvalidArgumentException("The email can't be null");
+            throw new InvalidInputException("The email can't be null");
         }
 
         else if (!user.getEmail().matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
-            throw new InvalidArgumentException("The email must follow the pattern 'email@domain.com'");
+            throw new InvalidInputException("The email must follow the pattern 'email@domain.com'");
         }
 
         else if (user.getAddress() == null) {
-            throw new InvalidArgumentException("The address can't be null");
+            throw new InvalidInputException("The address can't be null");
         }
 
         else if (user.getAddress().isEmpty()) {
-            throw new InvalidArgumentException("The address can't be empty");
+            throw new InvalidInputException("The address can't be empty");
         }
 
         else if (user.getAddress().isBlank()) {
-            throw new InvalidArgumentException("The address can't be blank");
+            throw new InvalidInputException("The address can't be blank");
         }
-
-        return true;
     }
 }

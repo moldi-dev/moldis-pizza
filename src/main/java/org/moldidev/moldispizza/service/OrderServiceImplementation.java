@@ -5,7 +5,7 @@ import org.moldidev.moldispizza.entity.Basket;
 import org.moldidev.moldispizza.entity.Order;
 import org.moldidev.moldispizza.entity.User;
 import org.moldidev.moldispizza.enumeration.OrderStatus;
-import org.moldidev.moldispizza.exception.InvalidArgumentException;
+import org.moldidev.moldispizza.exception.InvalidInputException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.OrderDTOMapper;
 import org.moldidev.moldispizza.repository.BasketRepository;
@@ -35,11 +35,9 @@ public class OrderServiceImplementation implements OrderService {
 
     @Override
     public OrderDTO save(Order order) {
-        if (checkIfOrderIsValid(order)) {
-            return orderDTOMapper.apply(orderRepository.save(order));
-        }
+        checkIfOrderIsValid(order);
 
-        return null;
+        return orderDTOMapper.apply(orderRepository.save(order));
     }
 
     @Override
@@ -105,17 +103,15 @@ public class OrderServiceImplementation implements OrderService {
         Order foundOrder = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found by id " + orderId));
 
-        if (checkIfOrderIsValid(updatedOrder)) {
-            foundOrder.setPizzas(updatedOrder.getPizzas());
-            foundOrder.setStatus(updatedOrder.getStatus());
-            foundOrder.setTotalPrice(updatedOrder.getTotalPrice());
-            foundOrder.setUser(updatedOrder.getUser());
-            foundOrder.setCreatedAt(updatedOrder.getCreatedAt());
+        checkIfOrderIsValid(updatedOrder);
 
-            return orderDTOMapper.apply(orderRepository.save(foundOrder));
-        }
+        foundOrder.setPizzas(updatedOrder.getPizzas());
+        foundOrder.setStatus(updatedOrder.getStatus());
+        foundOrder.setTotalPrice(updatedOrder.getTotalPrice());
+        foundOrder.setUser(updatedOrder.getUser());
+        foundOrder.setCreatedAt(updatedOrder.getCreatedAt());
 
-        return null;
+        return orderDTOMapper.apply(orderRepository.save(foundOrder));
     }
 
     @Override
@@ -137,31 +133,29 @@ public class OrderServiceImplementation implements OrderService {
         orderRepository.deleteAll(orders);
     }
 
-    private boolean checkIfOrderIsValid(Order order) {
+    private void checkIfOrderIsValid(Order order) {
         if (order.getUser() == null) {
-            throw new InvalidArgumentException("The user can't be null");
+            throw new InvalidInputException("The user can't be null");
         }
 
         if (order.getTotalPrice() == null) {
-            throw new InvalidArgumentException("The total price can't be null");
+            throw new InvalidInputException("The total price can't be null");
         }
 
         else if (order.getTotalPrice() <= 0) {
-            throw new InvalidArgumentException("The total price must be positive");
+            throw new InvalidInputException("The total price must be positive");
         }
 
         else if (order.getPizzas() == null) {
-            throw new InvalidArgumentException("The pizza list can't be null");
+            throw new InvalidInputException("The pizza list can't be null");
         }
 
         else if (order.getPizzas().isEmpty()) {
-            throw new InvalidArgumentException("The pizza list can't be empty");
+            throw new InvalidInputException("The pizza list can't be empty");
         }
 
         else if (order.getStatus() == null) {
             order.setStatus(OrderStatus.PENDING);
         }
-
-        return true;
     }
 }

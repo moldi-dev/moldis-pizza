@@ -4,7 +4,7 @@ import org.moldidev.moldispizza.dto.ImageDTO;
 import org.moldidev.moldispizza.entity.Image;
 import org.moldidev.moldispizza.entity.Pizza;
 import org.moldidev.moldispizza.entity.User;
-import org.moldidev.moldispizza.exception.InvalidArgumentException;
+import org.moldidev.moldispizza.exception.InvalidInputException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.ImageDTOMapper;
 import org.moldidev.moldispizza.repository.ImageRepository;
@@ -179,6 +179,8 @@ public class ImageServiceImplementation implements ImageService {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found by id " + userId));
 
+        checkIfImageIsValid(image);
+
         Optional<Image> foundImage = imageRepository.findByUserId(userId);
 
         try {
@@ -270,11 +272,13 @@ public class ImageServiceImplementation implements ImageService {
         imageRepository.delete(foundImage);
     }
 
-    private boolean checkIfImageIsValid(MultipartFile image) {
+    private void checkIfImageIsValid(MultipartFile image) {
         if (image == null) {
-            throw new InvalidArgumentException("The image can't be null");
+            throw new InvalidInputException("The image can't be null");
         }
 
-        return true;
+        else if (image.getSize() > 5 * 1024 * 1024) {
+            throw new InvalidInputException("The image size can't be greater than 5MB");
+        }
     }
 }

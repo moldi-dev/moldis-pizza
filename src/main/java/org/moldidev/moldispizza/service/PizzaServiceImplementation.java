@@ -2,7 +2,7 @@ package org.moldidev.moldispizza.service;
 
 import org.moldidev.moldispizza.dto.PizzaDTO;
 import org.moldidev.moldispizza.entity.Pizza;
-import org.moldidev.moldispizza.exception.InvalidArgumentException;
+import org.moldidev.moldispizza.exception.InvalidInputException;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.PizzaDTOMapper;
@@ -34,11 +34,9 @@ public class PizzaServiceImplementation implements PizzaService {
             throw new ResourceAlreadyExistsException("Pizza " + pizza.getName() + " already exists");
         }
 
-        if (checkIfPizzaIsValid(pizza)) {
-            return pizzaDTOMapper.apply(pizzaRepository.save(pizza));
-        }
+        checkIfPizzaIsValid(pizza);
 
-        return null;
+        return pizzaDTOMapper.apply(pizzaRepository.save(pizza));
     }
 
     @Override
@@ -82,16 +80,14 @@ public class PizzaServiceImplementation implements PizzaService {
             throw new ResourceAlreadyExistsException("Pizza " + updatedPizza.getName() + " already exists");
         }
 
-        if (checkIfPizzaIsValid(updatedPizza)) {
-            foundPizza.setImages(updatedPizza.getImages());
-            foundPizza.setName(updatedPizza.getName());
-            foundPizza.setIngredients(updatedPizza.getIngredients());
-            foundPizza.setPrice(updatedPizza.getPrice());
+        checkIfPizzaIsValid(updatedPizza);
 
-            return pizzaDTOMapper.apply(pizzaRepository.save(foundPizza));
-        }
+        foundPizza.setImages(updatedPizza.getImages());
+        foundPizza.setName(updatedPizza.getName());
+        foundPizza.setIngredients(updatedPizza.getIngredients());
+        foundPizza.setPrice(updatedPizza.getPrice());
 
-        return null;
+        return pizzaDTOMapper.apply(pizzaRepository.save(foundPizza));
     }
 
     @Override
@@ -99,15 +95,13 @@ public class PizzaServiceImplementation implements PizzaService {
         Pizza foundPizza = pizzaRepository.findByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("Pizza not found by name " + name));
 
-        if (checkIfPizzaIsValid(updatedPizza)) {
-            foundPizza.setImages(updatedPizza.getImages());
-            foundPizza.setIngredients(updatedPizza.getIngredients());
-            foundPizza.setPrice(updatedPizza.getPrice());
+        checkIfPizzaIsValid(updatedPizza);
 
-            return pizzaDTOMapper.apply(pizzaRepository.save(foundPizza));
-        }
+        foundPizza.setImages(updatedPizza.getImages());
+        foundPizza.setIngredients(updatedPizza.getIngredients());
+        foundPizza.setPrice(updatedPizza.getPrice());
 
-        return null;
+        return pizzaDTOMapper.apply(pizzaRepository.save(foundPizza));
     }
 
     @Override
@@ -126,27 +120,25 @@ public class PizzaServiceImplementation implements PizzaService {
         pizzaRepository.delete(foundPizza);
     }
 
-    private boolean checkIfPizzaIsValid(Pizza pizza) {
+    private void checkIfPizzaIsValid(Pizza pizza) {
         if (pizza.getName() == null) {
-            throw new InvalidArgumentException("The pizza's name can't be null");
+            throw new InvalidInputException("The pizza's name can't be null");
         }
 
         else if (pizza.getName().isEmpty()) {
-            throw new InvalidArgumentException("The pizza's name can't be empty");
+            throw new InvalidInputException("The pizza's name can't be empty");
         }
 
         else if (pizza.getName().isBlank()) {
-            throw new InvalidArgumentException("The pizza's name can't be blank");
+            throw new InvalidInputException("The pizza's name can't be blank");
         }
 
         else if (pizza.getPrice() == null) {
-            throw new InvalidArgumentException("The pizza's price can't be null");
+            throw new InvalidInputException("The pizza's price can't be null");
         }
 
         else if (pizza.getPrice() <= 0) {
-            throw new InvalidArgumentException("The pizza's price must be positive");
+            throw new InvalidInputException("The pizza's price must be positive");
         }
-
-        return true;
     }
 }
