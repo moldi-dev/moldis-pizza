@@ -4,6 +4,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -49,21 +50,34 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(message, HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler({BadCredentialsException.class, SignatureException.class, ExpiredJwtException.class})
-    public ResponseEntity<ErrorResponse> handleSecurityUnauthorizedExceptions(Exception exception, WebRequest request) {
+    @ExceptionHandler({BadCredentialsException.class, SignatureException.class, ExpiredJwtException.class, InsufficientAuthenticationException.class, AccessDeniedException.class, AccountStatusException.class})
+    public ResponseEntity<ErrorResponse> handleSecurityExceptions(Exception ex, WebRequest request) {
         ErrorResponse message = new ErrorResponse();
-        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 
-        if (exception instanceof BadCredentialsException) {
+        if (ex instanceof BadCredentialsException) {
             message.setErrorMessage("Invalid credentials");
+            status = HttpStatus.UNAUTHORIZED;
         }
 
-        else if (exception instanceof SignatureException) {
-            message.setErrorMessage("JWT signature validation failed");
+        else if (ex instanceof SignatureException) {
+            message.setErrorMessage("The JWT signature is invalid");
+            status = HttpStatus.UNAUTHORIZED;
         }
 
-        else if (exception instanceof ExpiredJwtException) {
-            message.setErrorMessage("JWT expired");
+        else if (ex instanceof ExpiredJwtException) {
+            message.setErrorMessage("The JWT has expired");
+            status = HttpStatus.UNAUTHORIZED;
+        }
+
+        else if (ex instanceof InsufficientAuthenticationException || ex instanceof AccessDeniedException) {
+            message.setErrorMessage("You are not authorized to access this resource");
+            status = HttpStatus.FORBIDDEN;
+        }
+
+        else if (ex instanceof AccountStatusException) {
+            message.setErrorMessage("This account is locked");
+            status = HttpStatus.FORBIDDEN;
         }
 
         message.setCreatedAt(new Date());
@@ -71,17 +85,6 @@ public class GlobalExceptionHandler {
         message.setErrorDescription(request.getDescription(false));
 
         return new ResponseEntity<>(message, status);
-    }
-
-    @ExceptionHandler({InsufficientAuthenticationException.class, AccessDeniedException.class})
-    public ResponseEntity<ErrorResponse> handleSecurityForbiddenExceptions(WebRequest request) {
-        ErrorResponse message = new ErrorResponse(
-                HttpStatus.FORBIDDEN.value(),
-                new Date(),
-                "You are not authorized to access this resource",
-                request.getDescription(false));
-
-        return new ResponseEntity<>(message, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(Exception.class)

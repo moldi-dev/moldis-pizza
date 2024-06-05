@@ -69,7 +69,7 @@ public class UserServiceImplementation implements UserService {
     @Override
     public User authenticate(String username, String password) {
         User foundUser = userRepository.findByUsername(username)
-                        .orElseThrow(() -> new ResourceNotFoundException("User not found by username " + username));
+                        .orElseThrow(() -> new ResourceNotFoundException("Invalid credentials"));
 
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 

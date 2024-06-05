@@ -1,4 +1,4 @@
-package org.moldidev.moldispizza.exception;
+package org.moldidev.moldispizza.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
