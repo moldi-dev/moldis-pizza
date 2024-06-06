@@ -35,11 +35,14 @@ public class SecurityConfiguration {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/v1/authentication/**").permitAll()
                         .requestMatchers("/api/v1/pizzas/find-all").permitAll()
                         .requestMatchers("/api/v1/pizzas/find/**").permitAll()
                         .requestMatchers("/api/v1/reviews/find-all/pizza-id=**").permitAll()
+                        .requestMatchers("/api/v1/users/verify/email=**/verification-token=**").permitAll()
                         .requestMatchers("/api/v1/users/update/username=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers("/api/v1/users/update-password/user-id=**/old-password=**/new-password=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers("/api/v1/users/update-email/user-id=**/new_email=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers("/api/v1/reviews/save").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers("/api/v1/reviews/update/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers("/api/v1/reviews/delete/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")

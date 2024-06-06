@@ -4,9 +4,8 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AccountStatusException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.mail.MailAuthenticationException;
+import org.springframework.security.authentication.*;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -50,12 +49,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(message, HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler({BadCredentialsException.class, SignatureException.class, ExpiredJwtException.class, InsufficientAuthenticationException.class, AccessDeniedException.class, AccountStatusException.class})
+    @ExceptionHandler({MailAuthenticationException.class, BadCredentialsException.class, SignatureException.class, ExpiredJwtException.class, InsufficientAuthenticationException.class, AccessDeniedException.class, DisabledException.class, LockedException.class})
     public ResponseEntity<ErrorResponse> handleSecurityExceptions(Exception ex, WebRequest request) {
         ErrorResponse message = new ErrorResponse();
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 
-        if (ex instanceof BadCredentialsException) {
+        if (ex instanceof MailAuthenticationException) {
+            message.setErrorMessage("Mail authentication failed");
+        }
+
+        else if (ex instanceof BadCredentialsException) {
             message.setErrorMessage("Invalid credentials");
             status = HttpStatus.UNAUTHORIZED;
         }
@@ -75,7 +78,12 @@ public class GlobalExceptionHandler {
             status = HttpStatus.FORBIDDEN;
         }
 
-        else if (ex instanceof AccountStatusException) {
+        else if (ex instanceof DisabledException) {
+            message.setErrorMessage("This account is not yet verified. Follow the steps sent on the email to verify it");
+            status = HttpStatus.UNAUTHORIZED;
+        }
+
+        else if (ex instanceof LockedException) {
             message.setErrorMessage("This account is locked");
             status = HttpStatus.FORBIDDEN;
         }

@@ -1,6 +1,6 @@
 package org.moldidev.moldispizza.utility;
 
-public record AuthenticationResponse(String username,
-                                     String jwtToken,
-                                     Long expiresIn) {
+public record AuthenticationResponse(String accessToken,
+                                     String refreshToken,
+                                     String rememberMeToken) {
 }

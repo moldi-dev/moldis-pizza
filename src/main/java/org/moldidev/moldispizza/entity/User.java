@@ -51,7 +51,7 @@ public class User implements UserDetails {
     @Size(max = 50, message = "The last name can contain at most 50 characters")
     private String lastName;
 
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
     @Email(message = "The email must follow the pattern 'email@domain.com'")
     private String email;
 
@@ -65,8 +65,14 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Column(name = "verification_token")
+    private String verificationToken;
+
     @Column(name = "is_locked")
     private Boolean isLocked;
+
+    @Column(name = "is_enabled")
+    private Boolean isEnabled;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -90,6 +96,6 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return isEnabled;
     }
 }

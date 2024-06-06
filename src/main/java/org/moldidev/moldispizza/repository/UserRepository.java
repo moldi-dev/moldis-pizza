@@ -11,6 +11,8 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
+    Optional<User> findByEmail(String email);
+    Optional<User> findByVerificationToken(String verificationToken);
 
     @Query(value = "SELECT u.* FROM public.users AS u " +
             "JOIN public.images AS i ON u.image_id = i.image_id " +
