@@ -12,6 +12,7 @@ Welcome to Moldi's Pizza (backend only) application! This Spring Boot applicatio
 - Reviews: Users can place reviews on their ordered pizzas.
 - Pizza Management: Create, read, update and delete pizzas.
 - Data Persistence: All the data is saved in a PostgreSQL database.
+- Data Auditing: Every action is logged with a username and a timestamp. 
 
 
 ## Technologies used

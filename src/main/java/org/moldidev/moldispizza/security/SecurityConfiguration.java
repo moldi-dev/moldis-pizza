@@ -33,8 +33,11 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/api/v1/authentication/**").permitAll()
+
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/users/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/verify?email=**&token=**").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/users/remove-image/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/users/set-image/id=**/image-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/pizzas**").permitAll()
 
@@ -43,17 +46,15 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/reviews/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/reviews/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
 
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/baskets/add/user-id=**/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/baskets/remove/user-id=**/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/baskets/add-pizza/user-id=**/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/baskets/remove-pizza/user-id=**/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/user-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.POST, "/api/v1/orders/user-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
 
+                        .requestMatchers(HttpMethod.POST, "/api/v1/images").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/api/v1/images/user-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/api/v1/images/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.POST, "/api/v1/images").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/images/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/images/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
 
                         .anyRequest().hasRole("ADMINISTRATOR")
                 )

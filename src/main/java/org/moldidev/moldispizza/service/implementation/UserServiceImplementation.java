@@ -157,6 +157,35 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
+    public UserDTO setUserImage(Long userId, Long imageId) {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found by id " + userId));
+
+        Image foundImage = imageRepository.findById(imageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Image not found by id " + imageId));
+
+        foundUser.setImage(foundImage);
+
+        return userDTOMapper.apply(userRepository.save(foundUser));
+    }
+
+    @Override
+    public UserDTO removeUserImage(Long userId) {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found by id " + userId));
+
+        Image userImage = foundUser.getImage();
+
+        if (userImage != null) {
+            foundUser.setImage(null);
+            imageService.delete(userImage);
+            return userDTOMapper.apply(userRepository.save(foundUser));
+        }
+
+        throw new ResourceNotFoundException("User " + userId + " has no image");
+    }
+
+    @Override
     public UserDTO updateById(Long userId, User updatedUser) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found by id " + userId));

@@ -17,5 +17,8 @@ public interface PizzaService {
 
     PizzaDTO updateById(Long pizzaId, Pizza updatedPizza);
 
+    PizzaDTO addImage(Long pizzaId, Long imageId);
+    PizzaDTO removeImage(Long pizzaId, Long imageId);
+
     void deleteById(Long pizzaId);
 }

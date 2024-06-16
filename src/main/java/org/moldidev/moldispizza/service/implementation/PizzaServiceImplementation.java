@@ -87,6 +87,41 @@ public class PizzaServiceImplementation implements PizzaService {
     }
 
     @Override
+    public PizzaDTO addImage(Long pizzaId, Long imageId) {
+        Pizza foundPizza = pizzaRepository.findById(pizzaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pizza not found by id " + pizzaId));
+
+        Image foundImage = imageRepository.findById(imageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Image not found by id " + imageId));
+
+        if (foundPizza.getImages().contains(foundImage)) {
+            throw new ResourceAlreadyExistsException("Pizza " + foundPizza.getName() + " already has this image");
+        }
+
+        foundPizza.getImages().add(foundImage);
+
+        return pizzaDTOMapper.apply(pizzaRepository.save(foundPizza));
+    }
+
+    @Override
+    public PizzaDTO removeImage(Long pizzaId, Long imageId) {
+        Pizza foundPizza = pizzaRepository.findById(pizzaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pizza not found by id " + pizzaId));
+
+        Image foundImage = imageRepository.findById(imageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Image not found by id " + imageId));
+
+        if (!foundPizza.getImages().contains(foundImage)) {
+            throw new ResourceNotFoundException("Pizza " + foundPizza.getName() + " does not have this image");
+        }
+
+        imageService.delete(foundImage);
+        foundPizza.getImages().remove(foundImage);
+
+        return pizzaDTOMapper.apply(pizzaRepository.save(foundPizza));
+    }
+
+    @Override
     public void deleteById(Long pizzaId) {
         Pizza foundPizza = pizzaRepository.findById(pizzaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pizza not found by id " + pizzaId));

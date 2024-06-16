@@ -99,6 +99,38 @@ public class PizzaController {
         );
     }
 
+    @PatchMapping("/add-image/id={pizza_id}/image-id={image_id}")
+    public ResponseEntity<HTTPResponse> addImageToPizza(@PathVariable("pizza_id") Long pizzaId, @PathVariable("image_id") Long imageId) {
+        PizzaDTO result = pizzaService.addImage(pizzaId, imageId);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("Pizza image added successfully")
+                        .data(Map.of("pizzaDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
+    }
+
+    @PatchMapping("/remove-image/id={pizza_id}/image-id={image_id}")
+    public ResponseEntity<HTTPResponse> removeImageFromPizza(@PathVariable("pizza_id") Long pizzaId, @PathVariable("image_id") Long id) {
+        PizzaDTO result = pizzaService.removeImage(pizzaId, id);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("Pizza image removed successfully")
+                        .data(Map.of("pizzaDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
+    }
+
     @DeleteMapping("/id={id}")
     public ResponseEntity<HTTPResponse> deleteById(@PathVariable("id") Long pizzaId) {
         pizzaService.deleteById(pizzaId);

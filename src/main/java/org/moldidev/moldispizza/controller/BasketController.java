@@ -99,7 +99,7 @@ public class BasketController {
         );
     }
 
-    @PatchMapping("/add/user-id={user_id}/pizza-id={pizza_id}")
+    @PatchMapping("/add-pizza/user-id={user_id}/pizza-id={pizza_id}")
     public ResponseEntity<HTTPResponse> addPizzaToUserBasket(@PathVariable("user_id") Long userId, @PathVariable("pizza_id") Long pizzaId) {
         BasketDTO result = basketService.addPizzaToUserBasket(userId, pizzaId);
 
@@ -115,7 +115,7 @@ public class BasketController {
         );
     }
 
-    @PatchMapping("/remove/user-id={user_id}/pizza_id={pizza_id}")
+    @PatchMapping("/remove-pizza/user-id={user_id}/pizza_id={pizza_id}")
     public ResponseEntity<HTTPResponse> removePizzaFromUserBasket(@PathVariable("user_id") Long userId, @PathVariable("pizza_id") Long pizzaId) {
         BasketDTO result = basketService.removePizzaFromUserBasket(userId, pizzaId);
 

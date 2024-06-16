@@ -22,6 +22,9 @@ public interface UserService {
 
     ResponseEntity<String> verifyByVerificationToken(String email, String verificationToken);
 
+    UserDTO setUserImage(Long userId, Long imageId);
+    UserDTO removeUserImage(Long userId);
+
     UserDTO updateById(Long userId, User updatedUser);
 
     void deleteById(Long userId);

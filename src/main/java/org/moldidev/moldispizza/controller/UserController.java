@@ -133,6 +133,38 @@ public class UserController {
         );
     }
 
+    @PatchMapping("/set-image/id={user_id}/image-id={image_id}")
+    public ResponseEntity<HTTPResponse> setUserImage(@PathVariable("user_id") Long userId, @PathVariable("image_id") Long imageId) {
+        UserDTO result = userService.setUserImage(userId, imageId);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("userDTO", result))
+                        .message("User's image set successfully")
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
+    }
+
+    @PatchMapping("/remove-image/id={user_id}")
+    public ResponseEntity<HTTPResponse> removeUserImage(@PathVariable("user_id") Long userId) {
+        UserDTO result = userService.removeUserImage(userId);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("userDTO", result))
+                        .message("User's image removed successfully")
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
+    }
+
     @DeleteMapping("/id={id}")
     public ResponseEntity<HTTPResponse> deleteById(@PathVariable("id") Long userId) {
         userService.deleteById(userId);
