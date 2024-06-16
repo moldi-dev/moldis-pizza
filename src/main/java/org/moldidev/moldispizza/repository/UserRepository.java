@@ -21,6 +21,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query(value = "SELECT u.* FROM public.users AS u " +
             "JOIN public.images AS i ON u.image_id = i.image_id " +
-            "WHERE i.name = :image_name", nativeQuery = true)
-    Optional<User> findByImageName(@Param("image_name") String imageName);
+            "WHERE i.url = :image_url", nativeQuery = true)
+    Optional<User> findByImageUrl(@Param("image_url") String imageUrl);
 }

@@ -27,7 +27,7 @@ public class OrderDTOMapper implements Function<Order, OrderDTO> {
                         .map(pizzaDTOMapper::apply)
                         .collect(Collectors.toList()),
                 order.getTotalPrice(),
-                order.getCreatedAt(),
+                order.getCreatedDate(),
                 order.getStatus()
         );
     }

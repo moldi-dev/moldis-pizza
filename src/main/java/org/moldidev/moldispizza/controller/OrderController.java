@@ -1,62 +1,116 @@
 package org.moldidev.moldispizza.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.OrderDTO;
 import org.moldidev.moldispizza.entity.Order;
+import org.moldidev.moldispizza.response.HTTPResponse;
 import org.moldidev.moldispizza.service.OrderService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.net.URI;
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/orders")
+@RequiredArgsConstructor
 public class OrderController {
+
     private final OrderService orderService;
 
-    public OrderController(OrderService orderService) {
-        this.orderService = orderService;
+    @GetMapping
+    public ResponseEntity<HTTPResponse> findAll(@RequestParam Optional<Integer> page, @RequestParam Optional<Integer> size) {
+        Page<OrderDTO> result = orderService.findAll(page.orElse(0), size.orElse(10));
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("ordersDTOs", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find-all")
-    public ResponseEntity<List<OrderDTO>> find() {
-        return ResponseEntity.ok(orderService.findAll());
+    @GetMapping("/id={id}")
+    public ResponseEntity<HTTPResponse> findById(@PathVariable("id") Long orderId) {
+        OrderDTO result = orderService.findById(orderId);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("orderDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find/id={order_id}")
-    public ResponseEntity<OrderDTO> findById(@PathVariable("order_id") Long order_id) {
-        return ResponseEntity.ok(orderService.findById(order_id));
+    @GetMapping("/user-id={user_id}")
+    public ResponseEntity<HTTPResponse> findAllByUserId(@PathVariable("user_id") Long userId, @RequestParam Optional<Integer> page, @RequestParam Optional<Integer> size) {
+        Page<OrderDTO> result = orderService.findAllByUserId(userId, page.orElse(0), size.orElse(10));
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("ordersDTOs", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find-all/user-id={user_id}")
-    public ResponseEntity<List<OrderDTO>> findByUserId(@PathVariable("user_id") Long userId) {
-        return ResponseEntity.ok(orderService.findAllByUserId(userId));
+    @PostMapping
+    public ResponseEntity<HTTPResponse> save(@RequestBody Order order) {
+        OrderDTO result = orderService.save(order);
+
+        return ResponseEntity.created(URI.create("")).body(
+                HTTPResponse
+                        .builder()
+                        .message("Order created successfully")
+                        .data(Map.of("orderDTO", result))
+                        .status(HttpStatus.CREATED)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.CREATED.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/place-order/user-id={user_id}")
-    public ResponseEntity<OrderDTO> placeOrder(@PathVariable("user_id") Long userId) {
-        return ResponseEntity.ok(orderService.placeOrderByUserId(userId));
+    @PatchMapping
+    public ResponseEntity<HTTPResponse> updateById(@RequestParam("id") Long orderId, @RequestBody Order updatedOrder) {
+        OrderDTO result = orderService.updateById(orderId, updatedOrder);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("Order updated successfully")
+                        .data(Map.of("orderDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @PostMapping("/save")
-    public ResponseEntity<OrderDTO> save(@RequestBody Order order) {
-        return ResponseEntity.ok(orderService.save(order));
-    }
-
-    @PostMapping("/update/id={order_id}")
-    public ResponseEntity<OrderDTO> updateById(@PathVariable("order_id") Long orderId, @RequestBody Order order) {
-        return ResponseEntity.ok(orderService.updateById(orderId, order));
-    }
-
-    @DeleteMapping("/delete/id={order_id}")
-    public ResponseEntity<Void> deleteById(@PathVariable("order_id") Long orderId) {
+    @DeleteMapping
+    public ResponseEntity<HTTPResponse> deleteById(@RequestParam("id") Long orderId) {
         orderService.deleteById(orderId);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
 
-    @DeleteMapping("/delete-all/user-id={user_id}")
-    public ResponseEntity<Void> deleteByUserId(@PathVariable("user_id") Long userId) {
-        orderService.deleteAllByUserId(userId);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("Order deleted successfully")
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 }

@@ -27,6 +27,5 @@ public class PizzaDTOMapper implements Function<Pizza, PizzaDTO> {
                 pizza.getIngredients(),
                 pizza.getPrice()
         );
-
     }
 }

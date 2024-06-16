@@ -12,17 +12,17 @@ import java.util.List;
 @Table(name = "pizzas")
 @Entity
 @Data
-public class Pizza {
+public class Pizza extends Auditable {
 
-    @Column(name = "pizza_id")
+    @Column(name = "pizza_id", updatable = false)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long pizzaId;
 
     @Column(name = "name", unique = true)
-    @NotEmpty(message = "The pizza's name can't be empty")
-    @NotNull(message = "The pizza's name can't be null")
-    @NotBlank(message = "The pizza's name can't be blank")
+    @NotEmpty(message = "The pizza's name is required")
+    @NotNull(message = "The pizza's name is required")
+    @NotBlank(message = "The pizza's name is required")
     private String name;
 
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
@@ -33,5 +33,6 @@ public class Pizza {
 
     @Column(name = "price")
     @DecimalMin(value = "0.0", inclusive = false, message = "The pizza's price must be positive")
+    @NotNull(message = "The total price is required")
     private Double price;
 }

@@ -2,107 +2,128 @@ package org.moldidev.moldispizza.exception;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
+import org.moldidev.moldispizza.response.HTTPResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailAuthenticationException;
-import org.springframework.security.authentication.*;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 import java.nio.file.AccessDeniedException;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException exception, WebRequest request) {
-        ErrorResponse message = new ErrorResponse(
-                HttpStatus.NOT_FOUND.value(),
-                new Date(),
-                exception.getMessage(),
-                request.getDescription(false));
+    @ExceptionHandler(ObjectNotValidException.class)
+    public ResponseEntity<HTTPResponse> handleObjectNotValidException(ObjectNotValidException exception, WebRequest request) {
 
-        return new ResponseEntity<>(message, HttpStatus.NOT_FOUND);
+        HTTPResponse response = HTTPResponse
+                .builder()
+                .timestamp(LocalDateTime.now().toString())
+                .message("Validation failed")
+                .status(HttpStatus.BAD_REQUEST)
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .path(request.getDescription(false))
+                .data(Map.of("validationErrors", exception.getViolations()))
+                .build();
+
+        return new ResponseEntity<>(response, response.getStatus());
     }
 
-    @ExceptionHandler(InvalidInputException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidArgumentException(InvalidInputException exception, WebRequest request) {
-        ErrorResponse message = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                new Date(),
-                exception.getMessage(),
-                request.getDescription(false));
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<HTTPResponse> handleResourceNotFoundException(ResourceNotFoundException exception, WebRequest request) {
+        HTTPResponse response = HTTPResponse
+                .builder()
+                .timestamp(LocalDateTime.now().toString())
+                .message(exception.getMessage())
+                .status(HttpStatus.NOT_FOUND)
+                .statusCode(HttpStatus.NOT_FOUND.value())
+                .path(request.getDescription(false))
+                .build();
 
-        return new ResponseEntity<>(message, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(response, response.getStatus());
     }
 
     @ExceptionHandler(ResourceAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleResourceAlreadyExistsException(ResourceAlreadyExistsException exception, WebRequest request) {
-        ErrorResponse message = new ErrorResponse(
-                HttpStatus.CONFLICT.value(),
-                new Date(),
-                exception.getMessage(),
-                request.getDescription(false));
+    public ResponseEntity<HTTPResponse> handleResourceAlreadyExistsException(ResourceAlreadyExistsException exception, WebRequest request) {
+        HTTPResponse response = HTTPResponse
+                .builder()
+                .timestamp(LocalDateTime.now().toString())
+                .message(exception.getMessage())
+                .status(HttpStatus.CONFLICT)
+                .statusCode(HttpStatus.CONFLICT.value())
+                .path(request.getDescription(false))
+                .build();
 
-        return new ResponseEntity<>(message, HttpStatus.CONFLICT);
+        return new ResponseEntity<>(response, response.getStatus());
     }
 
     @ExceptionHandler({MailAuthenticationException.class, BadCredentialsException.class, SignatureException.class, ExpiredJwtException.class, InsufficientAuthenticationException.class, AccessDeniedException.class, DisabledException.class, LockedException.class})
-    public ResponseEntity<ErrorResponse> handleSecurityExceptions(Exception ex, WebRequest request) {
-        ErrorResponse message = new ErrorResponse();
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+    public ResponseEntity<HTTPResponse> handleSecurityExceptions(Exception exception, WebRequest request) {
+        HTTPResponse response = HTTPResponse.builder().build();
+        HttpStatus status = null;
 
-        if (ex instanceof MailAuthenticationException) {
-            message.setErrorMessage("Mail authentication failed");
+        if (exception instanceof MailAuthenticationException) {
+            response.setMessage("Mail authentication failed");
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
         }
 
-        else if (ex instanceof BadCredentialsException) {
-            message.setErrorMessage("Invalid credentials");
+        else if (exception instanceof BadCredentialsException) {
+            response.setMessage("Invalid credentials");
+            status = HttpStatus.NOT_FOUND;
+        }
+
+        else if (exception instanceof SignatureException) {
+            response.setMessage("The JWT signature is invalid");
             status = HttpStatus.UNAUTHORIZED;
         }
 
-        else if (ex instanceof SignatureException) {
-            message.setErrorMessage("The JWT signature is invalid");
+        else if (exception instanceof ExpiredJwtException) {
+            response.setMessage("The JWT has expired");
             status = HttpStatus.UNAUTHORIZED;
         }
 
-        else if (ex instanceof ExpiredJwtException) {
-            message.setErrorMessage("The JWT has expired");
-            status = HttpStatus.UNAUTHORIZED;
-        }
-
-        else if (ex instanceof InsufficientAuthenticationException || ex instanceof AccessDeniedException) {
-            message.setErrorMessage("You are not authorized to access this resource");
+        else if (exception instanceof InsufficientAuthenticationException || exception instanceof AccessDeniedException) {
+            response.setMessage("You are not authorized to access this resource");
             status = HttpStatus.FORBIDDEN;
         }
 
-        else if (ex instanceof DisabledException) {
-            message.setErrorMessage("This account is not yet verified. Follow the steps sent on the email to verify it");
+        else if (exception instanceof DisabledException) {
+            response.setMessage("This account is not yet verified. Follow the steps sent on the email to verify it");
             status = HttpStatus.UNAUTHORIZED;
         }
 
-        else if (ex instanceof LockedException) {
-            message.setErrorMessage("This account is locked");
+        else if (exception instanceof LockedException) {
+            response.setMessage("This account is locked");
             status = HttpStatus.FORBIDDEN;
         }
 
-        message.setCreatedAt(new Date());
-        message.setErrorCode(status.value());
-        message.setErrorDescription(request.getDescription(false));
+        response.setTimestamp(LocalDateTime.now().toString());
+        response.setStatusCode(status.value());
+        response.setStatus(status);
+        response.setPath(request.getDescription(false));
 
-        return new ResponseEntity<>(message, status);
+        return new ResponseEntity<>(response, response.getStatus());
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
-        ErrorResponse message = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                new Date(),
-                ex.getMessage(),
-                request.getDescription(false));
+    public ResponseEntity<HTTPResponse> handleGlobalException(Exception exception, WebRequest request) {
+        HTTPResponse response = HTTPResponse
+                .builder()
+                .timestamp(LocalDateTime.now().toString())
+                .message(exception.getMessage())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .path(request.getDescription(false))
+                .build();
 
-        return new ResponseEntity<>(message, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(response, response.getStatus());
     }
 }

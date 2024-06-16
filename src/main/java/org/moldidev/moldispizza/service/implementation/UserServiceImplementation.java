@@ -1,15 +1,19 @@
-package org.moldidev.moldispizza.service;
+package org.moldidev.moldispizza.service.implementation;
 
+import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.UserDTO;
-import org.moldidev.moldispizza.entity.Basket;
-import org.moldidev.moldispizza.entity.User;
+import org.moldidev.moldispizza.entity.*;
 import org.moldidev.moldispizza.enumeration.Role;
-import org.moldidev.moldispizza.exception.InvalidInputException;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.UserDTOMapper;
-import org.moldidev.moldispizza.repository.BasketRepository;
-import org.moldidev.moldispizza.repository.UserRepository;
+import org.moldidev.moldispizza.repository.*;
+import org.moldidev.moldispizza.service.EmailService;
+import org.moldidev.moldispizza.service.ImageService;
+import org.moldidev.moldispizza.service.UserService;
+import org.moldidev.moldispizza.validation.ObjectValidator;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,30 +25,29 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class UserServiceImplementation implements UserService {
+
     private final UserRepository userRepository;
     private final UserDTOMapper userDTOMapper;
     private final BasketRepository basketRepository;
+    private final ImageRepository imageRepository;
+    private final ImageService imageService;
+    private final ReviewRepository reviewRepository;
+    private final OrderRepository orderRepository;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
-
-    public UserServiceImplementation(UserRepository userRepository, UserDTOMapper userDTOMapper, BasketRepository basketRepository, AuthenticationManager authenticationManager, EmailService emailService) {
-        this.userRepository = userRepository;
-        this.userDTOMapper = userDTOMapper;
-        this.basketRepository = basketRepository;
-        this.authenticationManager = authenticationManager;
-        this.emailService = emailService;
-    }
+    private final ObjectValidator<User> objectValidator;
 
     @Override
-    public ResponseEntity<String> save(User user) {
+    public UserDTO save(User user) {
+        objectValidator.validate(user);
+
         Optional<User> foundUser = userRepository.findByUsername(user.getUsername());
 
         if (foundUser.isPresent()) {
@@ -56,8 +59,6 @@ public class UserServiceImplementation implements UserService {
         if (foundUserByEmail.isPresent()) {
             throw new ResourceAlreadyExistsException("Email " + user.getEmail() + " is already taken");
         }
-
-        checkIfUserIsValid(user);
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         String verificationToken = generateVerificationToken(user);
@@ -79,7 +80,7 @@ public class UserServiceImplementation implements UserService {
 
         emailService.sendCompleteRegistrationEmail(savedUser.getEmail(), verificationToken);
 
-        return new ResponseEntity<>("Account successfully created. Follow the steps sent to the email '" + savedUser.getEmail() + "' in order to activate your account.", HttpStatus.OK);
+        return userDTOMapper.apply(savedUser);
     }
 
     @Override
@@ -125,17 +126,14 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public List<UserDTO> findAll() {
-        List<User> users = userRepository.findAll();
+    public Page<UserDTO> findAll(int page, int size) {
+        Page<User> users = userRepository.findAll(PageRequest.of(page, size));
 
         if (users.isEmpty()) {
             throw new ResourceNotFoundException("No users found");
         }
 
-        return users
-                .stream()
-                .map(userDTOMapper::apply)
-                .collect(Collectors.toList());
+        return users.map(userDTOMapper);
     }
 
     @Override
@@ -154,61 +152,20 @@ public class UserServiceImplementation implements UserService {
         }
 
         else {
-            return new ResponseEntity<>("The verification code is invalid", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("The verification token is invalid", HttpStatus.BAD_REQUEST);
         }
-    }
-
-    @Override
-    public UserDTO updatePassword(Long userId, String oldPassword, String newPassword) {
-        User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found by id " + userId));
-
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-
-        if (!encoder.matches(oldPassword, foundUser.getPassword())) {
-            throw new InvalidInputException("Old password is incorrect");
-        }
-
-        foundUser.setPassword(encoder.encode(newPassword));
-
-        return userDTOMapper.apply(userRepository.save(foundUser));
     }
 
     @Override
     public UserDTO updateById(Long userId, User updatedUser) {
         User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found by user id " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found by id " + userId));
 
-        checkIfUserIsValid(updatedUser);
+        objectValidator.validate(updatedUser);
 
-        foundUser.setEmail(updatedUser.getEmail());
-        foundUser.setImage(updatedUser.getImage());
-        foundUser.setFirstName(updatedUser.getFirstName());
-        foundUser.setLastName(updatedUser.getLastName());
-        foundUser.setAddress(updatedUser.getAddress());
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-        if (updatedUser.getRole() != null) {
-            foundUser.setRole(updatedUser.getRole());
-        }
-
-        if (updatedUser.getIsLocked() != null) {
-            foundUser.setIsLocked(updatedUser.getIsLocked());
-        }
-
-        if (updatedUser.getIsEnabled() != null) {
-            foundUser.setIsEnabled(updatedUser.getIsEnabled());
-        }
-
-        return userDTOMapper.apply(userRepository.save(foundUser));
-    }
-
-    @Override
-    public UserDTO updateByUsername(String username, User updatedUser) {
-        User foundUser = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found by username " + username));
-
-        checkIfUserIsValid(updatedUser);
-
+        foundUser.setPassword(encoder.encode(updatedUser.getPassword()));
         foundUser.setEmail(updatedUser.getEmail());
         foundUser.setImage(updatedUser.getImage());
         foundUser.setFirstName(updatedUser.getFirstName());
@@ -233,23 +190,23 @@ public class UserServiceImplementation implements UserService {
     @Override
     public void deleteById(Long userId) {
         User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found by user id " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found by id " + userId));
 
+        Page<Order> foundUserOrders = orderRepository.findAllByUserUserId(userId, null);
+        Page<Review> foundUserReviews = reviewRepository.findAllByUserUserId(userId, null);
         Optional<Basket> foundUserBasket = basketRepository.findByUserUserId(userId);
+        Optional<Image> foundUserImage = imageRepository.findByUserId(userId);
 
         foundUserBasket.ifPresent(basketRepository::delete);
+        foundUserImage.ifPresent(imageService::delete);
 
-        userRepository.delete(foundUser);
-    }
+        if (!foundUserReviews.isEmpty()) {
+            reviewRepository.deleteAll(foundUserReviews);
+        }
 
-    @Override
-    public void deleteByUsername(String username) {
-        User foundUser = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found by username " + username));
-
-        Optional<Basket> foundUserBasket = basketRepository.findByUserUserId(foundUser.getUserId());
-
-        foundUserBasket.ifPresent(basketRepository::delete);
+        if (!foundUserOrders.isEmpty()) {
+            orderRepository.deleteAll(foundUserOrders);
+        }
 
         userRepository.delete(foundUser);
     }
@@ -274,88 +231,6 @@ public class UserServiceImplementation implements UserService {
 
         catch (NoSuchAlgorithmException e) {
             return null;
-        }
-    }
-
-    private void checkIfUserIsValid(User user) {
-        if (user.getUsername() == null) {
-            throw new InvalidInputException("The username can't be null");
-        }
-
-        else if (user.getUsername().isEmpty()) {
-            throw new InvalidInputException("The username can't be empty");
-        }
-
-        else if (user.getUsername().isBlank()) {
-            throw new InvalidInputException("The username can't be blank");
-        }
-
-        else if (user.getUsername().length() < 10 || user.getUsername().length() > 100) {
-            throw new InvalidInputException("The username must contain at least 10 characters and at most 100 characters");
-        }
-
-        else if (user.getPassword() == null) {
-            throw new InvalidInputException("The password can't be null");
-        }
-
-        else if (user.getPassword().isEmpty()) {
-            throw new InvalidInputException("The password can't be empty");
-        }
-
-        else if (user.getPassword().isBlank()) {
-            throw new InvalidInputException("The password can't be blank");
-        }
-
-        else if (user.getFirstName() == null) {
-            throw new InvalidInputException("The first name can't be null");
-        }
-
-        else if (user.getFirstName().isEmpty()) {
-            throw new InvalidInputException("The first name can't be empty");
-        }
-
-        else if (user.getFirstName().isBlank()) {
-            throw new InvalidInputException("The first name can't be blank");
-        }
-
-        else if (user.getFirstName().length() > 50) {
-            throw new InvalidInputException("The first name can contain at most than 50 characters");
-        }
-
-        else if (user.getLastName() == null) {
-            throw new InvalidInputException("The last name can't be null");
-        }
-
-        else if (user.getLastName().isEmpty()) {
-            throw new InvalidInputException("The last name can't be empty");
-        }
-
-        else if (user.getLastName().isBlank()) {
-            throw new InvalidInputException("The last name can't be blank");
-        }
-
-        else if (user.getLastName().length() > 50) {
-            throw new InvalidInputException("The last name can contain at most 50 characters");
-        }
-
-        else if (user.getEmail() == null) {
-            throw new InvalidInputException("The email can't be null");
-        }
-
-        else if (!user.getEmail().matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
-            throw new InvalidInputException("The email must follow the pattern 'email@domain.com'");
-        }
-
-        else if (user.getAddress() == null) {
-            throw new InvalidInputException("The address can't be null");
-        }
-
-        else if (user.getAddress().isEmpty()) {
-            throw new InvalidInputException("The address can't be empty");
-        }
-
-        else if (user.getAddress().isBlank()) {
-            throw new InvalidInputException("The address can't be blank");
         }
     }
 }

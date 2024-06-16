@@ -1,82 +1,150 @@
 package org.moldidev.moldispizza.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.UserDTO;
 import org.moldidev.moldispizza.entity.User;
+import org.moldidev.moldispizza.response.HTTPResponse;
 import org.moldidev.moldispizza.service.UserService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/users")
+@RequiredArgsConstructor
 public class UserController {
+
     private final UserService userService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
+    @GetMapping
+    public ResponseEntity<HTTPResponse> findAll(@RequestParam("page") Optional<Integer> page, @RequestParam("size") Optional<Integer> size) {
+        Page<UserDTO> result = userService.findAll(page.orElse(0), size.orElse(10));
+
+        return ResponseEntity.ok(
+               HTTPResponse
+                       .builder()
+                       .data(Map.of("usersDTOs", result))
+                       .status(HttpStatus.OK)
+                       .timestamp(LocalDateTime.now().toString())
+                       .statusCode(HttpStatus.OK.value())
+                       .build()
+        );
     }
 
-    @GetMapping("/find-all")
-    public ResponseEntity<List<UserDTO>> findAll() {
-        return ResponseEntity.ok(userService.findAll());
+    @GetMapping("/id={id}")
+    public ResponseEntity<HTTPResponse> findById(@PathVariable("id") Long userId) {
+        UserDTO result = userService.findById(userId);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("userDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find/id={user_id}")
-    public ResponseEntity<UserDTO> findById(@PathVariable("user_id") Long userId) {
-        return ResponseEntity.ok(userService.findById(userId));
+    @GetMapping("/username={username}")
+    public ResponseEntity<HTTPResponse> findByUsername(@PathVariable("username") String username) {
+        UserDTO result = userService.findByUsername(username);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("userDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find/username={username}")
-    public ResponseEntity<UserDTO> findByUsername(@PathVariable("username") String username) {
-        return ResponseEntity.ok(userService.findByUsername(username));
+    @GetMapping("/email={email}")
+    public ResponseEntity<HTTPResponse> findByEmail(@PathVariable("email") String email) {
+        UserDTO result = userService.findByEmail(email);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("userDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find/email={email}")
-    public ResponseEntity<UserDTO> findByEmail(@PathVariable("email") String email) {
-        return ResponseEntity.ok(userService.findByEmail(email));
+    @GetMapping("/token={token}")
+    public ResponseEntity<HTTPResponse> findByVerificationToken(@PathVariable("token") String token) {
+        UserDTO result = userService.findByVerificationToken(token);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("userDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find/verification-token={verification_token}")
-    public ResponseEntity<UserDTO> findByVerificationToken(@PathVariable("verification_token") String verificationToken) {
-        return ResponseEntity.ok(userService.findByVerificationToken(verificationToken));
+    @PostMapping
+    public ResponseEntity<HTTPResponse> save(@RequestBody User user) {
+        UserDTO result = userService.save(user);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("userDTO", result))
+                        .message("Account successfully created. Follow the steps sent on the email in order to activate it")
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/verify/email={email}/verification-token={verification_token}")
-    public ResponseEntity<String> verifyAccountByToken(@PathVariable("email") String email, @PathVariable("verification_token") String verificationToken) {
-        return userService.verifyByVerificationToken(email, verificationToken);
+    @GetMapping("/verify")
+    public ResponseEntity<String> verifyByVerificationToken(@RequestParam("email") String email, @RequestParam("token") String token) {
+        return userService.verifyByVerificationToken(email, token);
     }
 
-    @PostMapping("/save")
-    public ResponseEntity<String> save(@RequestBody User user) {
-        return userService.save(user);
+    @PatchMapping
+    public ResponseEntity<HTTPResponse> updateById(@RequestParam("id") Long userId, @RequestBody User updatedUser) {
+        UserDTO result = userService.updateById(userId, updatedUser);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("userDTO", result))
+                        .message("User updated successfully")
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @PostMapping("/update/id={user_id}")
-    public ResponseEntity<UserDTO> updateById(@PathVariable("user_id") Long userId, @RequestBody User user) {
-        return ResponseEntity.ok(userService.updateById(userId, user));
-    }
-
-    @PostMapping("/update/username={username}")
-    public ResponseEntity<UserDTO> updateByUsername(@PathVariable("username") String username, @RequestBody User user) {
-        return ResponseEntity.ok(userService.updateByUsername(username, user));
-    }
-
-    @PostMapping("/update-password/user-id={user_id}/old-password={old_password}/new-password={new_password}")
-    public ResponseEntity<UserDTO> updatePassword(@PathVariable("user_id") Long userId, @PathVariable("old_password") String oldPassword, @PathVariable("new_password") String newPassword) {
-        return ResponseEntity.ok(userService.updatePassword(userId, oldPassword, newPassword));
-    }
-
-    @DeleteMapping("/delete/id={user_id}")
-    public ResponseEntity<Void> deleteById(@PathVariable("user_id") Long userId) {
+    @DeleteMapping
+    public ResponseEntity<HTTPResponse> deleteById(@RequestParam("id") Long userId) {
         userService.deleteById(userId);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
 
-    @DeleteMapping("/delete/username={username}")
-    public ResponseEntity<Void> deleteByUsername(@PathVariable("username") String username) {
-        userService.deleteByUsername(username);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("User deleted successfully")
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 }

@@ -1,105 +1,182 @@
 package org.moldidev.moldispizza.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.ImageDTO;
-import org.moldidev.moldispizza.entity.Image;
+import org.moldidev.moldispizza.response.HTTPResponse;
 import org.moldidev.moldispizza.service.ImageService;
-import org.springframework.http.HttpHeaders;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/images")
+@RequiredArgsConstructor
 public class ImageController {
+
     private final ImageService imageService;
 
-    public ImageController(ImageService imageService) {
-        this.imageService = imageService;
+    @GetMapping
+    public ResponseEntity<HTTPResponse> findAll(@RequestParam("page") Optional<Integer> page, @RequestParam("size") Optional<Integer> size) {
+        Page<ImageDTO> result = imageService.findAll(page.orElse(0), page.orElse(10));
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("imagesDTOs", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find-all")
-    public ResponseEntity<List<ImageDTO>> findAll() {
-        return ResponseEntity.ok(imageService.findAll());
+    @GetMapping("/type={type}")
+    public ResponseEntity<HTTPResponse> findAllByType(@PathVariable("type") String type, @RequestParam("page") Optional<Integer> page, @RequestParam("size") Optional<Integer> size) {
+        Page<ImageDTO> result = imageService.findAllByType(type, page.orElse(0), size.orElse(10));
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("imagesDTOs", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find-all/type={type}")
-    public ResponseEntity<List<ImageDTO>> findAllByType(@PathVariable String type) {
-        return ResponseEntity.ok(imageService.findAllByType(type));
+    @GetMapping("/pizza-id={pizza_id}")
+    public ResponseEntity<HTTPResponse> findAllByPizzaId(@PathVariable("pizza_id") Long pizzaId) {
+        List<ImageDTO> result = imageService.findAllByPizzaId(pizzaId);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("imagesDTOs", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find-all/pizza-id={pizza_id}")
-    public ResponseEntity<List<ImageDTO>> findAllByPizzaId(@PathVariable("pizza_id") Long pizzaId) {
-        return ResponseEntity.ok(imageService.findAllByPizzaId(pizzaId));
+    @GetMapping(value = "/id={id}", produces = {MediaType.IMAGE_JPEG_VALUE})
+    public ResponseEntity<byte[]> findById(@PathVariable("id") Long imageId) {
+        ImageDTO result = imageService.findById(imageId);
+        String imagePath = result.url();
+        Path path = Paths.get(imagePath);
+
+        try {
+            byte[] imageBytes = Files.readAllBytes(path);
+
+            return ResponseEntity
+                    .ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(imageBytes);
+        }
+
+        catch (IOException e) {
+            throw new RuntimeException("Image could not be fetched");
+        }
     }
 
-    @GetMapping("/find/id={image_id}")
-    public ResponseEntity<ImageDTO> findById(@PathVariable("image_id") Long imageId) {
-        return ResponseEntity.ok(imageService.findById(imageId));
+    @GetMapping(value = "/url={url}", produces = {MediaType.IMAGE_JPEG_VALUE})
+    public ResponseEntity<byte[]> findByUrl(@PathVariable("url") String url) {
+        ImageDTO result = imageService.findByUrl(url);
+        String imagePath = result.url();
+        Path path = Paths.get(imagePath);
+
+        try {
+            byte[] imageBytes = Files.readAllBytes(path);
+
+            return ResponseEntity
+                    .ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(imageBytes);
+        }
+
+        catch (IOException e) {
+            throw new RuntimeException("Image could not be fetched");
+        }
     }
 
-    @GetMapping("/find/user-id={user_id}")
-    public ResponseEntity<ImageDTO> findByUserId(@PathVariable("user_id") Long userId) {
-        return ResponseEntity.ok(imageService.findByUserId(userId));
+    @GetMapping("/user-id={user_id}")
+    public ResponseEntity<byte[]> findByUserId(@PathVariable("user_id") Long userId) {
+        ImageDTO result = imageService.findByUserId(userId);
+        String imagePath = result.url();
+        Path path = Paths.get(imagePath);
+
+        try {
+            byte[] imageBytes = Files.readAllBytes(path);
+
+            return ResponseEntity
+                    .ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(imageBytes);
+        }
+
+        catch (IOException e) {
+            throw new RuntimeException("Image could not be fetched");
+        }
     }
 
-    @GetMapping("/find/id={image_id}/see-image")
-    public ResponseEntity<byte[]> findByIdAndSee(@PathVariable("image_id") Long imageId) {
-        Image image = imageService.findImageEntityById(imageId);
+    @PostMapping
+    public ResponseEntity<HTTPResponse> save(@RequestBody MultipartFile image) {
+        ImageDTO result = imageService.save(image);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.IMAGE_JPEG);
-
-        return new ResponseEntity<>(image.getData(), headers, HttpStatus.OK);
+        return ResponseEntity.created(URI.create("")).body(
+                HTTPResponse
+                        .builder()
+                        .message("Image created successfully")
+                        .data(Map.of("imageDTO", result))
+                        .status(HttpStatus.CREATED)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.CREATED.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find/user-id={user_id}/see-image")
-    public ResponseEntity<byte[]> findByUserIdAndSee(@PathVariable("user_id") Long userId) {
-        Image image = imageService.findImageEntityById(userId);
+    @PatchMapping
+    public ResponseEntity<HTTPResponse> updateById(@RequestParam("id") Long imageId, @RequestBody MultipartFile updatedImage) {
+        ImageDTO result = imageService.updateById(imageId, updatedImage);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.IMAGE_JPEG);
-
-        return new ResponseEntity<>(image.getData(), headers, HttpStatus.OK);
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("Image updated successfully")
+                        .data(Map.of("imageDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find/name={name}")
-    public ResponseEntity<ImageDTO> findByName(@PathVariable String name) {
-        return ResponseEntity.ok(imageService.findByName(name));
-    }
-
-    @PostMapping("/save")
-    public ResponseEntity<ImageDTO> save(@RequestBody MultipartFile image) {
-        return ResponseEntity.ok(imageService.save(image));
-    }
-
-    @PostMapping("/update/id={image_id}")
-    public ResponseEntity<ImageDTO> updateById(@PathVariable("image_id") Long imageId, @RequestBody MultipartFile image) {
-        return ResponseEntity.ok(imageService.updateById(imageId, image));
-    }
-
-    @PostMapping("/update/name={name}")
-    public ResponseEntity<ImageDTO> updateByName(@PathVariable("name") String name, @RequestBody MultipartFile image) {
-        return ResponseEntity.ok(imageService.updateByName(name, image));
-    }
-
-    @PostMapping("/update/user-id={user_id}")
-    public ResponseEntity<ImageDTO> updateByUserId(@PathVariable("user_id") Long userId, @RequestBody MultipartFile image) {
-        return ResponseEntity.ok(imageService.updateByUserId(userId, image));
-    }
-
-    @DeleteMapping("/delete/id={image_id}")
-    public ResponseEntity<Void> deleteById(@PathVariable("image_id") Long imageId) {
+    @DeleteMapping
+    public ResponseEntity<HTTPResponse> deleteById(@RequestParam("id") Long imageId) {
         imageService.deleteById(imageId);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
 
-    @DeleteMapping("/delete/name={name}")
-    public ResponseEntity<Void> deleteByName(@PathVariable("name") String name) {
-        imageService.deleteByName(name);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("Image deleted successfully")
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 }

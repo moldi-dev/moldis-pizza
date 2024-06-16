@@ -17,7 +17,7 @@ public class EmailService {
     public void sendCompleteRegistrationEmail(String to, String verificationToken) {
         SimpleMailMessage email = new SimpleMailMessage();
 
-        String link = "http://localhost:8080/api/v1/users/verify/email=" + to + "/verification-token=" + verificationToken;
+        String link = "http://localhost:8080/api/v1/users/verify?email=" + to + "&token=" + verificationToken;
 
         email.setTo(to);
         email.setFrom("moldispizza@outlook.com");

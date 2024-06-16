@@ -2,6 +2,7 @@ package org.moldidev.moldispizza.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -35,26 +36,29 @@ public class SecurityConfiguration {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/v1/authentication/**").permitAll()
-                        .requestMatchers("/api/v1/pizzas/find-all").permitAll()
-                        .requestMatchers("/api/v1/pizzas/find/**").permitAll()
-                        .requestMatchers("/api/v1/reviews/find-all/pizza-id=**").permitAll()
-                        .requestMatchers("/api/v1/users/verify/email=**/verification-token=**").permitAll()
-                        .requestMatchers("/api/v1/users/update/username=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers("/api/v1/users/update-password/user-id=**/old-password=**/new-password=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers("/api/v1/users/update-email/user-id=**/new_email=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers("/api/v1/reviews/save").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers("/api/v1/reviews/update/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers("/api/v1/reviews/delete/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers("/api/v1/baskets/find/user-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers("/api/v1/baskets/add-pizza/user-id=**/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers("/api/v1/baskets/remove-pizza/user-id=**/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers("/api/v1/orders/find-all/user-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers("/api/v1/orders/place-order/user-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers("/api/v1/images/save").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers("/api/v1/images/find/user-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers("/api/v1/images/find/user-id=**/see-image").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
-                        .requestMatchers("/api/v1/images/update/user-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/authentication/**").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/users?username=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/verify?email=**&token=**").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/pizzas**").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews/pizza-id=**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/reviews").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/reviews?id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/reviews?id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/baskets/user-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/baskets?id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/user-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/orders").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/images/user-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/images/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/images").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/images?id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/images?id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+
                         .anyRequest().hasRole("ADMINISTRATOR")
                 )
                 .sessionManagement(session -> session
@@ -72,7 +76,7 @@ public class SecurityConfiguration {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(List.of("http://localhost:3000"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "DELETE"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "DELETE", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

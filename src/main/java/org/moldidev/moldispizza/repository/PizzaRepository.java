@@ -19,6 +19,6 @@ public interface PizzaRepository extends JpaRepository<Pizza,Long> {
     @Query(value = "SELECT p.* FROM public.pizzas AS p " +
             "JOIN public.pizzas_images AS pi ON p.pizza_id = pi.pizza_pizza_id " +
             "JOIN public.images AS i ON pi.images_image_id = i.image_id " +
-            "WHERE i.name = :image_name", nativeQuery = true)
-    Optional<Pizza> findByImageName(@Param("image_name") String imageName);
+            "WHERE i.url = :image_url", nativeQuery = true)
+    Optional<Pizza> findByImageUrl(@Param("image_url") String imageUrl);
 }

@@ -12,9 +12,8 @@ public class ImageDTOMapper implements Function<Image, ImageDTO> {
     public ImageDTO apply(Image image) {
         return new ImageDTO(
                 image.getImageId(),
-                image.getName(),
-                image.getType(),
-                image.getData()
+                image.getUrl(),
+                image.getType()
         );
     }
 }

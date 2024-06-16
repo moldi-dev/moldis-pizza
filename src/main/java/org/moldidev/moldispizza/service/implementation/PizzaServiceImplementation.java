@@ -1,40 +1,45 @@
-package org.moldidev.moldispizza.service;
+package org.moldidev.moldispizza.service.implementation;
 
+import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.PizzaDTO;
+import org.moldidev.moldispizza.entity.Image;
 import org.moldidev.moldispizza.entity.Pizza;
-import org.moldidev.moldispizza.exception.InvalidInputException;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.PizzaDTOMapper;
+import org.moldidev.moldispizza.repository.ImageRepository;
 import org.moldidev.moldispizza.repository.PizzaRepository;
+import org.moldidev.moldispizza.service.ImageService;
+import org.moldidev.moldispizza.service.PizzaService;
+import org.moldidev.moldispizza.validation.ObjectValidator;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class PizzaServiceImplementation implements PizzaService {
 
     private final PizzaRepository pizzaRepository;
     private final PizzaDTOMapper pizzaDTOMapper;
-
-    public PizzaServiceImplementation(PizzaRepository pizzaRepository, PizzaDTOMapper pizzaDTOMapper) {
-        this.pizzaRepository = pizzaRepository;
-        this.pizzaDTOMapper = pizzaDTOMapper;
-    }
+    private final ImageRepository imageRepository;
+    private final ImageService imageService;
+    private final ObjectValidator<Pizza> objectValidator;
 
     @Override
     public PizzaDTO save(Pizza pizza) {
+        objectValidator.validate(pizza);
+
         Optional<Pizza> foundPizza = pizzaRepository.findByName(pizza.getName());
 
         if (foundPizza.isPresent()) {
             throw new ResourceAlreadyExistsException("Pizza " + pizza.getName() + " already exists");
         }
-
-        checkIfPizzaIsValid(pizza);
 
         return pizzaDTOMapper.apply(pizzaRepository.save(pizza));
     }
@@ -56,17 +61,14 @@ public class PizzaServiceImplementation implements PizzaService {
     }
 
     @Override
-    public List<PizzaDTO> findAll() {
-        List<Pizza> pizzas = pizzaRepository.findAll();
+    public Page<PizzaDTO> findAll(int page, int size) {
+        Page<Pizza> pizzas = pizzaRepository.findAll(PageRequest.of(page, size));
 
         if (pizzas.isEmpty()) {
             throw new ResourceNotFoundException("No pizzas found");
         }
 
-        return pizzas
-                .stream()
-                .map(pizzaDTOMapper::apply)
-                .collect(Collectors.toList());
+        return pizzas.map(pizzaDTOMapper);
     }
 
     @Override
@@ -74,30 +76,10 @@ public class PizzaServiceImplementation implements PizzaService {
         Pizza foundPizza = pizzaRepository.findById(pizzaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pizza not found by id " + pizzaId));
 
-        Optional<Pizza> foundPizzaByName = pizzaRepository.findByName(updatedPizza.getName());
-
-        if (foundPizzaByName.isPresent()) {
-            throw new ResourceAlreadyExistsException("Pizza " + updatedPizza.getName() + " already exists");
-        }
-
-        checkIfPizzaIsValid(updatedPizza);
+        objectValidator.validate(updatedPizza);
 
         foundPizza.setImages(updatedPizza.getImages());
         foundPizza.setName(updatedPizza.getName());
-        foundPizza.setIngredients(updatedPizza.getIngredients());
-        foundPizza.setPrice(updatedPizza.getPrice());
-
-        return pizzaDTOMapper.apply(pizzaRepository.save(foundPizza));
-    }
-
-    @Override
-    public PizzaDTO updateByName(String name, Pizza updatedPizza) {
-        Pizza foundPizza = pizzaRepository.findByName(name)
-                .orElseThrow(() -> new ResourceNotFoundException("Pizza not found by name " + name));
-
-        checkIfPizzaIsValid(updatedPizza);
-
-        foundPizza.setImages(updatedPizza.getImages());
         foundPizza.setIngredients(updatedPizza.getIngredients());
         foundPizza.setPrice(updatedPizza.getPrice());
 
@@ -109,36 +91,10 @@ public class PizzaServiceImplementation implements PizzaService {
         Pizza foundPizza = pizzaRepository.findById(pizzaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pizza not found by id " + pizzaId));
 
-        pizzaRepository.delete(foundPizza);
-    }
+        List<Image> foundPizzaImages = imageRepository.findAllByPizzaId(pizzaId);
 
-    @Override
-    public void deleteByName(String name) {
-        Pizza foundPizza = pizzaRepository.findByName(name)
-                .orElseThrow(() -> new ResourceNotFoundException("Pizza not found by name " + name));
+        foundPizzaImages.forEach(imageService::delete);
 
         pizzaRepository.delete(foundPizza);
-    }
-
-    private void checkIfPizzaIsValid(Pizza pizza) {
-        if (pizza.getName() == null) {
-            throw new InvalidInputException("The pizza's name can't be null");
-        }
-
-        else if (pizza.getName().isEmpty()) {
-            throw new InvalidInputException("The pizza's name can't be empty");
-        }
-
-        else if (pizza.getName().isBlank()) {
-            throw new InvalidInputException("The pizza's name can't be blank");
-        }
-
-        else if (pizza.getPrice() == null) {
-            throw new InvalidInputException("The pizza's price can't be null");
-        }
-
-        else if (pizza.getPrice() <= 0) {
-            throw new InvalidInputException("The pizza's price must be positive");
-        }
     }
 }

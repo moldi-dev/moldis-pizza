@@ -10,30 +10,23 @@ import java.util.List;
 @Table(name = "baskets")
 @Entity
 @Data
-public class Basket {
+public class Basket extends Auditable {
 
-    @Column(name = "basket_id")
+    @Column(name = "basket_id", updatable = false)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long basketId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userId", referencedColumnName = "user_id", nullable = false)
+    @NotNull(message = "The user is required")
     private User user;
 
     @Column(name = "total_price")
     @DecimalMin(value = "0.0", message = "The total price must be positive")
+    @NotNull(message = "The total price is required")
     private Double totalPrice;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @NotNull(message = "The pizza list can't be null")
     private List<Pizza> pizzas;
-
-    public void addPizza(@NotNull Pizza pizza) {
-        this.pizzas.add(pizza);
-    }
-
-    public void removePizza(@NotNull Pizza pizza) {
-        this.pizzas.remove(pizza);
-    }
 }

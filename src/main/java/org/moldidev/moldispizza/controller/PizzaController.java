@@ -1,62 +1,116 @@
 package org.moldidev.moldispizza.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.PizzaDTO;
 import org.moldidev.moldispizza.entity.Pizza;
+import org.moldidev.moldispizza.response.HTTPResponse;
 import org.moldidev.moldispizza.service.PizzaService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.net.URI;
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/pizzas")
+@RequiredArgsConstructor
 public class PizzaController {
+
     private final PizzaService pizzaService;
 
-    public PizzaController(PizzaService pizzaService) {
-        this.pizzaService = pizzaService;
+    @GetMapping
+    public ResponseEntity<HTTPResponse> findAll(@RequestParam Optional<Integer> page, @RequestParam Optional<Integer> size) {
+        Page<PizzaDTO> result = pizzaService.findAll(page.orElse(0), size.orElse(10));
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("pizzasDTOs", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find-all")
-    public ResponseEntity<List<PizzaDTO>> findAll() {
-        return ResponseEntity.ok(pizzaService.findAll());
+    @GetMapping("/id={id}")
+    public ResponseEntity<HTTPResponse> findById(@PathVariable("id") Long pizzaId) {
+        PizzaDTO result = pizzaService.findById(pizzaId);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("pizzaDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find/id={pizza_id}")
-    public ResponseEntity<PizzaDTO> findById(@PathVariable("pizza_id") Long pizza_id) {
-        return ResponseEntity.ok(pizzaService.findById(pizza_id));
+    @GetMapping("/name={name}")
+    public ResponseEntity<HTTPResponse> findByName(@PathVariable("name") String pizzaName) {
+        PizzaDTO result = pizzaService.findByName(pizzaName);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("pizzaDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find/name={name}")
-    public ResponseEntity<PizzaDTO> findByName(@PathVariable("name") String name) {
-        return ResponseEntity.ok(pizzaService.findByName(name));
+    @PostMapping
+    public ResponseEntity<HTTPResponse> save(@RequestBody Pizza pizza) {
+        PizzaDTO result = pizzaService.save(pizza);
+
+        return ResponseEntity.created(URI.create("")).body(
+                HTTPResponse
+                        .builder()
+                        .message("Pizza created successfully")
+                        .data(Map.of("pizzaDTO", result))
+                        .status(HttpStatus.CREATED)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.CREATED.value())
+                        .build()
+        );
     }
 
-    @PostMapping("/save")
-    public ResponseEntity<PizzaDTO> save(@RequestBody Pizza pizza) {
-        return ResponseEntity.ok(pizzaService.save(pizza));
+    @PatchMapping
+    public ResponseEntity<HTTPResponse> updateById(@RequestParam("id") Long pizzaId, @RequestBody Pizza updatedPizza) {
+        PizzaDTO result = pizzaService.updateById(pizzaId, updatedPizza);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("Pizza updated successfully")
+                        .data(Map.of("pizzaDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @PostMapping("/update/id={pizza_id}")
-    public ResponseEntity<PizzaDTO> updateById(@PathVariable("pizza_id") Long pizzaId, @RequestBody Pizza pizza) {
-        return ResponseEntity.ok(pizzaService.updateById(pizzaId, pizza));
-    }
-
-    @PostMapping("/update/name={name}")
-    public ResponseEntity<PizzaDTO> updateByName(@PathVariable("name") String name, @RequestBody Pizza pizza) {
-        return ResponseEntity.ok(pizzaService.updateByName(name, pizza));
-    }
-
-    @DeleteMapping("/delete/id={pizza_id}")
-    public ResponseEntity<Void> deleteById(@PathVariable("pizza_id") Long pizzaId) {
+    @DeleteMapping
+    public ResponseEntity<HTTPResponse> deleteById(@RequestParam("id") Long pizzaId) {
         pizzaService.deleteById(pizzaId);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
 
-    @DeleteMapping("/delete/name={name}")
-    public ResponseEntity<Void> deleteByName(@PathVariable("name") String name) {
-        pizzaService.deleteByName(name);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("Pizza deleted successfully")
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 }

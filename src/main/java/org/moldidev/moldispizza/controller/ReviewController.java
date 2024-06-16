@@ -1,62 +1,131 @@
 package org.moldidev.moldispizza.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.ReviewDTO;
 import org.moldidev.moldispizza.entity.Review;
+import org.moldidev.moldispizza.response.HTTPResponse;
 import org.moldidev.moldispizza.service.ReviewService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.net.URI;
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/reviews")
+@RequiredArgsConstructor
 public class ReviewController {
+
     private final ReviewService reviewService;
 
-    public ReviewController(ReviewService reviewService) {
-        this.reviewService = reviewService;
+    @GetMapping
+    public ResponseEntity<HTTPResponse> findAll(@RequestParam("page") Optional<Integer> page, Optional<Integer> size) {
+        Page<ReviewDTO> result = reviewService.findAll(page.orElse(0), size.orElse(10));
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("reviewsDTOs", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find-all")
-    public ResponseEntity<List<ReviewDTO>> findAll() {
-        return ResponseEntity.ok(reviewService.findAll());
+    @GetMapping("/user-id={user_id}")
+    public ResponseEntity<HTTPResponse> findAllByUserId(@PathVariable("user_id") Long userId, @RequestParam("page") Optional<Integer> page, Optional<Integer> size) {
+        Page<ReviewDTO> result = reviewService.findAllByUserId(userId, page.orElse(0), size.orElse(10));
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("reviewsDTOs", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find/id={review_id}")
-    public ResponseEntity<ReviewDTO> findById(@PathVariable("review_id") Long reviewId) {
-        return ResponseEntity.ok(reviewService.findById(reviewId));
+    @GetMapping("/pizza-id={pizza_id}")
+    public ResponseEntity<HTTPResponse> findAllByPizzaId(@PathVariable("pizza_id") Long pizzaId, Optional<Integer> page, Optional<Integer> size) {
+        Page<ReviewDTO> result = reviewService.findAllByPizzaId(pizzaId, page.orElse(0), size.orElse(10));
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("reviewsDTOs", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find-all/user-id={user_id}")
-    public ResponseEntity<List<ReviewDTO>> findAllByUserId(@PathVariable("user_id") Long userId) {
-        return ResponseEntity.ok(reviewService.findAllByUserId(userId));
+    @GetMapping("/id={id}")
+    public ResponseEntity<HTTPResponse> findById(@PathVariable("id") Long reviewId) {
+        ReviewDTO result = reviewService.findById(reviewId);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("reviewDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping("/find-all/pizza-id={pizza_id}")
-    public ResponseEntity<List<ReviewDTO>> findAllByPizzaId(@PathVariable("pizza_id") Long pizzaId) {
-        return ResponseEntity.ok(reviewService.findAllByPizzaId(pizzaId));
+    @PostMapping
+    public ResponseEntity<HTTPResponse> save(@RequestBody Review review) {
+        ReviewDTO result = reviewService.save(review);
+
+        return ResponseEntity.created(URI.create("")).body(
+                HTTPResponse
+                        .builder()
+                        .message("Review created successfully")
+                        .data(Map.of("reviewsDTOs", result))
+                        .status(HttpStatus.CREATED)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.CREATED.value())
+                        .build()
+        );
     }
 
-    @PostMapping("/save")
-    public ResponseEntity<ReviewDTO> save(@RequestBody Review review) {
-        return ResponseEntity.ok(reviewService.save(review));
+    @PatchMapping
+    public ResponseEntity<HTTPResponse> updateById(@RequestParam("id") Long reviewId, @RequestBody Review updatedReview) {
+        ReviewDTO result = reviewService.updateById(reviewId, updatedReview);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("Review updated successfully")
+                        .data(Map.of("reviewDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @PostMapping("/update/id={review_id}")
-    public ResponseEntity<ReviewDTO> updateById(@PathVariable("review_id") Long reviewId, @RequestBody Review review) {
-        return ResponseEntity.ok(reviewService.updateById(reviewId, review));
-    }
-
-    @DeleteMapping("/delete/id={review_id}")
-    public ResponseEntity<Void> deleteById(@PathVariable("review_id") Long reviewId) {
+    @DeleteMapping
+    public ResponseEntity<HTTPResponse> deleteById(@RequestParam("id") Long reviewId) {
         reviewService.deleteById(reviewId);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
 
-    @DeleteMapping("/delete-all/user-id={user_id}")
-    public ResponseEntity<Void> deleteAllByUserId(@PathVariable("user_id") Long userId) {
-        reviewService.deleteAllByUserId(userId);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("Review deleted successfully")
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 }

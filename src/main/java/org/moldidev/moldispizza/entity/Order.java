@@ -7,35 +7,32 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.moldidev.moldispizza.enumeration.OrderStatus;
 
-import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 
 @Table(name = "orders")
 @Entity
 @Data
-public class Order {
+public class Order extends Auditable {
 
-    @Column(name = "order_id")
+    @Column(name = "order_id", updatable = false)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userId", referencedColumnName = "user_id", nullable = false)
+    @NotNull(message = "The user is required")
     private User user;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @NotNull(message = "The pizza list can't be null")
-    @NotEmpty(message = "The pizza list can't be empty")
+    @NotNull(message = "The pizza list is required")
+    @NotEmpty(message = "The pizza list is required")
     private List<Pizza> pizzas;
 
     @Column(name = "total_price")
-    @DecimalMin(value = "0.0", inclusive = false, message = "The price must be positive")
+    @DecimalMin(value = "0.0", inclusive = false, message = "The total price must be positive")
+    @NotNull(message = "The total price is required")
     private Double totalPrice;
-
-    @Column(name = "created_at")
-    private Date createdAt = java.sql.Date.valueOf(LocalDate.now());
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
