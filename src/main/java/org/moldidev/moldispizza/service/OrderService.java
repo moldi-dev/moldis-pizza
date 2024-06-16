@@ -17,5 +17,7 @@ public interface OrderService {
 
     OrderDTO updateById(Long orderId, Order updatedOrder);
 
+    OrderDTO placeOrderByUserBasket(Long userId);
+
     void deleteById(Long orderId);
 }

@@ -3,9 +3,11 @@ package org.moldidev.moldispizza.service.implementation;
 import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.BasketDTO;
 import org.moldidev.moldispizza.entity.Basket;
+import org.moldidev.moldispizza.entity.Pizza;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.BasketDTOMapper;
 import org.moldidev.moldispizza.repository.BasketRepository;
+import org.moldidev.moldispizza.repository.PizzaRepository;
 import org.moldidev.moldispizza.service.BasketService;
 import org.moldidev.moldispizza.validation.ObjectValidator;
 import org.springframework.data.domain.Page;
@@ -21,6 +23,7 @@ public class BasketServiceImplementation implements BasketService {
     private final BasketRepository basketRepository;
     private final BasketDTOMapper basketDTOMapper;
     private final ObjectValidator<Basket> objectValidator;
+    private final PizzaRepository pizzaRepository;
 
     @Override
     public BasketDTO save(Basket basket) {
@@ -67,6 +70,38 @@ public class BasketServiceImplementation implements BasketService {
         foundBasket.setTotalPrice(updatedBasket.getTotalPrice());
 
         return basketDTOMapper.apply(basketRepository.save(foundBasket));
+    }
+
+    @Override
+    public BasketDTO addPizzaToUserBasket(Long userId, Long pizzaId) {
+        Basket foundBasket = basketRepository.findByUserUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Basket not found by user id " + userId));
+
+        Pizza foundPizza = pizzaRepository.findById(pizzaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pizza not found by id " + pizzaId));
+
+        foundBasket.getPizzas().add(foundPizza);
+        foundBasket.setTotalPrice(foundBasket.getTotalPrice() + foundPizza.getPrice());
+
+        return basketDTOMapper.apply(basketRepository.save(foundBasket));
+    }
+
+    @Override
+    public BasketDTO removePizzaFromUserBasket(Long userId, Long pizzaId) {
+        Basket foundBasket = basketRepository.findByUserUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Basket not found by user id " + userId));
+
+        Pizza foundPizza = pizzaRepository.findById(pizzaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pizza not found by id " + pizzaId));
+
+        if (foundBasket.getPizzas().contains(foundPizza)) {
+            foundBasket.setTotalPrice(foundBasket.getTotalPrice() - foundPizza.getPrice());
+            foundBasket.getPizzas().remove(foundPizza);
+
+            return basketDTOMapper.apply(basketRepository.save(foundBasket));
+        }
+
+        throw new ResourceNotFoundException("Pizza not found by id " + pizzaId + " in user's " + userId + " basket");
     }
 
     @Override

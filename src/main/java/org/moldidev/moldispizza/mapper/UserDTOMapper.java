@@ -1,5 +1,6 @@
 package org.moldidev.moldispizza.mapper;
 
+import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.UserDTO;
 import org.moldidev.moldispizza.entity.User;
 import org.springframework.stereotype.Service;
@@ -7,12 +8,9 @@ import org.springframework.stereotype.Service;
 import java.util.function.Function;
 
 @Service
+@RequiredArgsConstructor
 public class UserDTOMapper implements Function<User, UserDTO> {
     private final ImageDTOMapper imageDTOMapper;
-
-    public UserDTOMapper(ImageDTOMapper imageDTOMapper) {
-        this.imageDTOMapper = imageDTOMapper;
-    }
 
     @Override
     public UserDTO apply(User user) {

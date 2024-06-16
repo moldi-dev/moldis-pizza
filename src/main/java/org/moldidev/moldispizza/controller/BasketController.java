@@ -83,8 +83,8 @@ public class BasketController {
         );
     }
 
-    @PatchMapping
-    public ResponseEntity<HTTPResponse> updateById(@RequestParam("id") Long basketId, @RequestBody Basket updatedBasket) {
+    @PatchMapping("/id={id}")
+    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long basketId, @RequestBody Basket updatedBasket) {
         BasketDTO result = basketService.updateById(basketId, updatedBasket);
 
         return ResponseEntity.ok(
@@ -99,8 +99,40 @@ public class BasketController {
         );
     }
 
-    @DeleteMapping
-    public ResponseEntity<HTTPResponse> deleteById(@RequestParam("id") Long basketId) {
+    @PatchMapping("/add/user-id={user_id}/pizza-id={pizza_id}")
+    public ResponseEntity<HTTPResponse> addPizzaToUserBasket(@PathVariable("user_id") Long userId, @PathVariable("pizza_id") Long pizzaId) {
+        BasketDTO result = basketService.addPizzaToUserBasket(userId, pizzaId);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("Pizza added successfully in the user's basket")
+                        .data(Map.of("basketDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
+    }
+
+    @PatchMapping("/remove/user-id={user_id}/pizza_id={pizza_id}")
+    public ResponseEntity<HTTPResponse> removePizzaFromUserBasket(@PathVariable("user_id") Long userId, @PathVariable("pizza_id") Long pizzaId) {
+        BasketDTO result = basketService.removePizzaFromUserBasket(userId, pizzaId);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("Pizza removed successfully from the user's basket")
+                        .data(Map.of("basketDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
+    }
+
+    @DeleteMapping("/id={id}")
+    public ResponseEntity<HTTPResponse> deleteById(@PathVariable("id") Long basketId) {
         basketService.deleteById(basketId);
 
         return ResponseEntity.ok(

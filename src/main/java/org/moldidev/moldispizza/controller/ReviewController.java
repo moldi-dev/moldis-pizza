@@ -98,8 +98,8 @@ public class ReviewController {
         );
     }
 
-    @PatchMapping
-    public ResponseEntity<HTTPResponse> updateById(@RequestParam("id") Long reviewId, @RequestBody Review updatedReview) {
+    @PatchMapping("/id={id}")
+    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long reviewId, @RequestBody Review updatedReview) {
         ReviewDTO result = reviewService.updateById(reviewId, updatedReview);
 
         return ResponseEntity.ok(
@@ -114,8 +114,8 @@ public class ReviewController {
         );
     }
 
-    @DeleteMapping
-    public ResponseEntity<HTTPResponse> deleteById(@RequestParam("id") Long reviewId) {
+    @DeleteMapping("/id={id}")
+    public ResponseEntity<HTTPResponse> deleteById(@PathVariable("id") Long reviewId) {
         reviewService.deleteById(reviewId);
 
         return ResponseEntity.ok(

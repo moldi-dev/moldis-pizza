@@ -149,8 +149,8 @@ public class ImageController {
         );
     }
 
-    @PatchMapping
-    public ResponseEntity<HTTPResponse> updateById(@RequestParam("id") Long imageId, @RequestBody MultipartFile updatedImage) {
+    @PatchMapping("/id={id}")
+    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long imageId, @RequestBody MultipartFile updatedImage) {
         ImageDTO result = imageService.updateById(imageId, updatedImage);
 
         return ResponseEntity.ok(
@@ -165,8 +165,8 @@ public class ImageController {
         );
     }
 
-    @DeleteMapping
-    public ResponseEntity<HTTPResponse> deleteById(@RequestParam("id") Long imageId) {
+    @DeleteMapping("/id={id}")
+    public ResponseEntity<HTTPResponse> deleteById(@PathVariable("id") Long imageId) {
         imageService.deleteById(imageId);
 
         return ResponseEntity.ok(

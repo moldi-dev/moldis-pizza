@@ -117,8 +117,8 @@ public class UserController {
         return userService.verifyByVerificationToken(email, token);
     }
 
-    @PatchMapping
-    public ResponseEntity<HTTPResponse> updateById(@RequestParam("id") Long userId, @RequestBody User updatedUser) {
+    @PatchMapping("/id={id}")
+    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long userId, @RequestBody User updatedUser) {
         UserDTO result = userService.updateById(userId, updatedUser);
 
         return ResponseEntity.ok(
@@ -133,8 +133,8 @@ public class UserController {
         );
     }
 
-    @DeleteMapping
-    public ResponseEntity<HTTPResponse> deleteById(@RequestParam("id") Long userId) {
+    @DeleteMapping("/id={id}")
+    public ResponseEntity<HTTPResponse> deleteById(@PathVariable("id") Long userId) {
         userService.deleteById(userId);
 
         return ResponseEntity.ok(

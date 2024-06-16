@@ -10,6 +10,7 @@ import lombok.Data;
 @Entity
 @Data
 public class Review extends Auditable {
+
     @Column(name = "review_id", updatable = false)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

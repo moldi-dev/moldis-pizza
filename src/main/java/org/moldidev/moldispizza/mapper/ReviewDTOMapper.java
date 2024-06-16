@@ -1,5 +1,6 @@
 package org.moldidev.moldispizza.mapper;
 
+import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.ReviewDTO;
 import org.moldidev.moldispizza.entity.Review;
 import org.springframework.stereotype.Service;
@@ -7,14 +8,11 @@ import org.springframework.stereotype.Service;
 import java.util.function.Function;
 
 @Service
+@RequiredArgsConstructor
 public class ReviewDTOMapper implements Function<Review, ReviewDTO> {
+
     private final UserDTOMapper userDTOMapper;
     private final PizzaDTOMapper pizzaDTOMapper;
-
-    public ReviewDTOMapper(UserDTOMapper userDTOMapper, PizzaDTOMapper pizzaDTOMapper) {
-        this.userDTOMapper = userDTOMapper;
-        this.pizzaDTOMapper = pizzaDTOMapper;
-    }
 
     @Override
     public ReviewDTO apply(Review review) {

@@ -83,8 +83,24 @@ public class OrderController {
         );
     }
 
-    @PatchMapping
-    public ResponseEntity<HTTPResponse> updateById(@RequestParam("id") Long orderId, @RequestBody Order updatedOrder) {
+    @PostMapping("/user-id={user_id}")
+    public ResponseEntity<HTTPResponse> placeOrderByUserBasket(@PathVariable("user_id") Long userId) {
+        OrderDTO result = orderService.placeOrderByUserBasket(userId);
+
+        return ResponseEntity.created(URI.create("")).body(
+                HTTPResponse
+                        .builder()
+                        .message("Order created successfully")
+                        .data(Map.of("orderDTO", result))
+                        .status(HttpStatus.CREATED)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.CREATED.value())
+                        .build()
+        );
+    }
+
+    @PatchMapping("id={id}")
+    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long orderId, @RequestBody Order updatedOrder) {
         OrderDTO result = orderService.updateById(orderId, updatedOrder);
 
         return ResponseEntity.ok(
@@ -99,8 +115,8 @@ public class OrderController {
         );
     }
 
-    @DeleteMapping
-    public ResponseEntity<HTTPResponse> deleteById(@RequestParam("id") Long orderId) {
+    @DeleteMapping("/id={id}")
+    public ResponseEntity<HTTPResponse> deleteById(@PathVariable("id") Long orderId) {
         orderService.deleteById(orderId);
 
         return ResponseEntity.ok(

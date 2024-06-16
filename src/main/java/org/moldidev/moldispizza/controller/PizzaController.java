@@ -83,8 +83,8 @@ public class PizzaController {
         );
     }
 
-    @PatchMapping
-    public ResponseEntity<HTTPResponse> updateById(@RequestParam("id") Long pizzaId, @RequestBody Pizza updatedPizza) {
+    @PatchMapping("/id={id}")
+    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long pizzaId, @RequestBody Pizza updatedPizza) {
         PizzaDTO result = pizzaService.updateById(pizzaId, updatedPizza);
 
         return ResponseEntity.ok(
@@ -99,8 +99,8 @@ public class PizzaController {
         );
     }
 
-    @DeleteMapping
-    public ResponseEntity<HTTPResponse> deleteById(@RequestParam("id") Long pizzaId) {
+    @DeleteMapping("/id={id}")
+    public ResponseEntity<HTTPResponse> deleteById(@PathVariable("id") Long pizzaId) {
         pizzaService.deleteById(pizzaId);
 
         return ResponseEntity.ok(

@@ -1,5 +1,6 @@
 package org.moldidev.moldispizza.security;
 
+import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.audit.ApplicationAuditAware;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.repository.UserRepository;
@@ -14,12 +15,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Configuration
+@RequiredArgsConstructor
 public class ApplicationConfiguration {
-    private final UserRepository userRepository;
 
-    public ApplicationConfiguration(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private final UserRepository userRepository;
 
     @Bean
     UserDetailsService userDetailsService() {

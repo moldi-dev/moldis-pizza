@@ -17,5 +17,8 @@ public interface BasketService {
 
     BasketDTO updateById(Long basketId, Basket updatedBasket);
 
+    BasketDTO addPizzaToUserBasket(Long userId, Long pizzaId);
+    BasketDTO removePizzaFromUserBasket(Long userId, Long pizzaId);
+
     void deleteById(Long basketId);
 }

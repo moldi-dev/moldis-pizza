@@ -7,6 +7,7 @@ import lombok.Data;
 @Entity
 @Data
 public class Image extends Auditable {
+
     @Column(name = "image_id", updatable = false)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
