@@ -11,11 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -73,64 +69,46 @@ public class ImageController {
         );
     }
 
-    @GetMapping(value = "/id={id}", produces = {MediaType.IMAGE_JPEG_VALUE})
-    public ResponseEntity<byte[]> findById(@PathVariable("id") Long imageId) {
-        ImageDTO result = imageService.findById(imageId);
-        String imagePath = result.url();
-        Path path = Paths.get(imagePath);
+    @GetMapping(value = "/id={id}", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<HTTPResponse> findById(@PathVariable("id") Long imageId) {
+        String result = imageService.findById(imageId);
 
-        try {
-            byte[] imageBytes = Files.readAllBytes(path);
-
-            return ResponseEntity
-                    .ok()
-                    .contentType(MediaType.IMAGE_JPEG)
-                    .body(imageBytes);
-        }
-
-        catch (IOException e) {
-            throw new RuntimeException("Image could not be fetched");
-        }
+        return ResponseEntity.ok(
+                HTTPResponse.builder()
+                        .data(Map.of("base64EncodedImage", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
-    @GetMapping(value = "/url={url}", produces = {MediaType.IMAGE_JPEG_VALUE})
-    public ResponseEntity<byte[]> findByUrl(@PathVariable("url") String url) {
-        ImageDTO result = imageService.findByUrl(url);
-        String imagePath = result.url();
-        Path path = Paths.get(imagePath);
+    @GetMapping(value = "/url={url}", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<HTTPResponse> findByUrl(@PathVariable("url") String url) {
+        String result = imageService.findByUrl(url);
 
-        try {
-            byte[] imageBytes = Files.readAllBytes(path);
-
-            return ResponseEntity
-                    .ok()
-                    .contentType(MediaType.IMAGE_JPEG)
-                    .body(imageBytes);
-        }
-
-        catch (IOException e) {
-            throw new RuntimeException("Image could not be fetched");
-        }
+        return ResponseEntity.ok(
+                HTTPResponse.builder()
+                        .data(Map.of("base64EncodedImage", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
     @GetMapping("/user-id={user_id}")
-    public ResponseEntity<byte[]> findByUserId(@PathVariable("user_id") Long userId) {
-        ImageDTO result = imageService.findByUserId(userId);
-        String imagePath = result.url();
-        Path path = Paths.get(imagePath);
+    public ResponseEntity<HTTPResponse> findByUserId(@PathVariable("user_id") Long userId) {
+        String result = imageService.findByUserId(userId);
 
-        try {
-            byte[] imageBytes = Files.readAllBytes(path);
-
-            return ResponseEntity
-                    .ok()
-                    .contentType(MediaType.IMAGE_JPEG)
-                    .body(imageBytes);
-        }
-
-        catch (IOException e) {
-            throw new RuntimeException("Image could not be fetched");
-        }
+        return ResponseEntity.ok(
+                HTTPResponse.builder()
+                        .data(Map.of("base64EncodedImage", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
     @PostMapping

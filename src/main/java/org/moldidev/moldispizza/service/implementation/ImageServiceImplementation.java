@@ -1,6 +1,7 @@
 package org.moldidev.moldispizza.service.implementation;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.moldidev.moldispizza.dto.ImageDTO;
 import org.moldidev.moldispizza.entity.Image;
 import org.moldidev.moldispizza.entity.Pizza;
@@ -71,27 +72,54 @@ public class ImageServiceImplementation implements ImageService {
     }
 
     @Override
-    public ImageDTO findById(Long imageId) {
+    public String findById(Long imageId) {
         Image foundImage = imageRepository.findById(imageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Image not found by id " + imageId));
 
-        return imageDTOMapper.apply(foundImage);
+        Path path = Paths.get(foundImage.getUrl());
+
+        try {
+            byte[] imageBytes = Files.readAllBytes(path);
+            return Base64.encodeBase64String(imageBytes);
+        }
+
+        catch (IOException e) {
+            throw new RuntimeException("Image could not be fetched");
+        }
     }
 
     @Override
-    public ImageDTO findByUrl(String url) {
+    public String findByUrl(String url) {
         Image foundImage = imageRepository.findByUrl(url)
                 .orElseThrow(() -> new ResourceNotFoundException("Image not found by url " + url));
 
-        return imageDTOMapper.apply(foundImage);
+        Path path = Paths.get(foundImage.getUrl());
+
+        try {
+            byte[] imageBytes = Files.readAllBytes(path);
+            return Base64.encodeBase64String(imageBytes);
+        }
+
+        catch (IOException e) {
+            throw new RuntimeException("Image could not be fetched");
+        }
     }
 
     @Override
-    public ImageDTO findByUserId(Long userId) {
+    public String findByUserId(Long userId) {
         Image foundImage = imageRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Image not found by user id " + userId));
 
-        return imageDTOMapper.apply(foundImage);
+        Path path = Paths.get(foundImage.getUrl());
+
+        try {
+            byte[] imageBytes = Files.readAllBytes(path);
+            return Base64.encodeBase64String(imageBytes);
+        }
+
+        catch (IOException e) {
+            throw new RuntimeException("Image could not be fetched");
+        }
     }
 
     @Override

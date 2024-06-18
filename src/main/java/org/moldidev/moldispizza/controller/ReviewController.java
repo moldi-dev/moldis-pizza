@@ -8,6 +8,7 @@ import org.moldidev.moldispizza.service.ReviewService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -99,8 +100,8 @@ public class ReviewController {
     }
 
     @PatchMapping("/id={id}")
-    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long reviewId, @RequestBody Review updatedReview) {
-        ReviewDTO result = reviewService.updateById(reviewId, updatedReview);
+    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long reviewId, @RequestBody Review updatedReview, Authentication connectedUser) {
+        ReviewDTO result = reviewService.updateById(reviewId, updatedReview, connectedUser);
 
         return ResponseEntity.ok(
                 HTTPResponse
@@ -115,8 +116,8 @@ public class ReviewController {
     }
 
     @DeleteMapping("/id={id}")
-    public ResponseEntity<HTTPResponse> deleteById(@PathVariable("id") Long reviewId) {
-        reviewService.deleteById(reviewId);
+    public ResponseEntity<HTTPResponse> deleteById(@PathVariable("id") Long reviewId, Authentication connectedUser) {
+        reviewService.deleteById(reviewId, connectedUser);
 
         return ResponseEntity.ok(
                 HTTPResponse

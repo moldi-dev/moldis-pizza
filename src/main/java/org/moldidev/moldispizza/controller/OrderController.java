@@ -8,6 +8,7 @@ import org.moldidev.moldispizza.service.OrderService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -53,8 +54,8 @@ public class OrderController {
     }
 
     @GetMapping("/user-id={user_id}")
-    public ResponseEntity<HTTPResponse> findAllByUserId(@PathVariable("user_id") Long userId, @RequestParam Optional<Integer> page, @RequestParam Optional<Integer> size) {
-        Page<OrderDTO> result = orderService.findAllByUserId(userId, page.orElse(0), size.orElse(10));
+    public ResponseEntity<HTTPResponse> findAllByUserId(@PathVariable("user_id") Long userId, @RequestParam Optional<Integer> page, @RequestParam Optional<Integer> size, Authentication connectedUser) {
+        Page<OrderDTO> result = orderService.findAllByUserId(userId, page.orElse(0), size.orElse(10), connectedUser);
 
         return ResponseEntity.ok(
                 HTTPResponse
@@ -84,8 +85,8 @@ public class OrderController {
     }
 
     @PostMapping("/user-id={user_id}")
-    public ResponseEntity<HTTPResponse> placeOrderByUserBasket(@PathVariable("user_id") Long userId) {
-        OrderDTO result = orderService.placeOrderByUserBasket(userId);
+    public ResponseEntity<HTTPResponse> placeOrderByUserBasket(@PathVariable("user_id") Long userId, Authentication connectedUser) {
+        OrderDTO result = orderService.placeOrderByUserBasket(userId, connectedUser);
 
         return ResponseEntity.created(URI.create("")).body(
                 HTTPResponse

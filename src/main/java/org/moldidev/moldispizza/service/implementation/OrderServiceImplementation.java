@@ -11,9 +11,11 @@ import org.moldidev.moldispizza.mapper.OrderDTOMapper;
 import org.moldidev.moldispizza.repository.BasketRepository;
 import org.moldidev.moldispizza.repository.OrderRepository;
 import org.moldidev.moldispizza.service.OrderService;
+import org.moldidev.moldispizza.service.SecurityService;
 import org.moldidev.moldispizza.validation.ObjectValidator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,7 @@ public class OrderServiceImplementation implements OrderService {
     private final OrderDTOMapper orderDTOMapper;
     private final ObjectValidator<Order> objectValidator;
     private final BasketRepository basketRepository;
+    private final SecurityService securityService;
 
     @Override
     public OrderDTO save(Order order) {
@@ -56,7 +59,9 @@ public class OrderServiceImplementation implements OrderService {
     }
 
     @Override
-    public Page<OrderDTO> findAllByUserId(Long userId, int page, int size) {
+    public Page<OrderDTO> findAllByUserId(Long userId, int page, int size, Authentication connectedUser) {
+        securityService.validateAuthenticatedUser(connectedUser, userId);
+
         Page<Order> orders = orderRepository.findAllByUserUserId(userId, PageRequest.of(page, size));
 
         if (orders.isEmpty()) {
@@ -82,7 +87,9 @@ public class OrderServiceImplementation implements OrderService {
     }
 
     @Override
-    public OrderDTO placeOrderByUserBasket(Long userId) {
+    public OrderDTO placeOrderByUserBasket(Long userId, Authentication connectedUser) {
+        securityService.validateAuthenticatedUser(connectedUser, userId);
+
         Basket foundBasket = basketRepository.findByUserUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Basket not found by user id " + userId));
 

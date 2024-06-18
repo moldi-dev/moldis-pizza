@@ -14,9 +14,9 @@ import java.util.List;
 public interface ImageService {
     ImageDTO save(MultipartFile image);
 
-    ImageDTO findById(Long imageId);
-    ImageDTO findByUrl(String url);
-    ImageDTO findByUserId(Long userId);
+    String findById(Long imageId);
+    String findByUrl(String url);
+    String findByUserId(Long userId);
     Page<ImageDTO> findAll(int page, int size);
     Page<ImageDTO> findAllByType(String type, int page, int size);
     List<ImageDTO> findAllByPizzaId(Long pizzaId);

@@ -8,6 +8,7 @@ import org.moldidev.moldispizza.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -52,8 +53,8 @@ public class UserController {
     }
 
     @GetMapping("/username={username}")
-    public ResponseEntity<HTTPResponse> findByUsername(@PathVariable("username") String username) {
-        UserDTO result = userService.findByUsername(username);
+    public ResponseEntity<HTTPResponse> findByUsername(@PathVariable("username") String username, Authentication connectedUser) {
+        UserDTO result = userService.findByUsername(username, connectedUser);
 
         return ResponseEntity.ok(
                 HTTPResponse
@@ -118,8 +119,8 @@ public class UserController {
     }
 
     @PatchMapping("/id={id}")
-    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long userId, @RequestBody User updatedUser) {
-        UserDTO result = userService.updateById(userId, updatedUser);
+    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long userId, @RequestBody User updatedUser, Authentication connectedUser) {
+        UserDTO result = userService.updateById(userId, updatedUser, connectedUser);
 
         return ResponseEntity.ok(
                 HTTPResponse
@@ -134,8 +135,8 @@ public class UserController {
     }
 
     @PatchMapping("/set-image/id={user_id}/image-id={image_id}")
-    public ResponseEntity<HTTPResponse> setUserImage(@PathVariable("user_id") Long userId, @PathVariable("image_id") Long imageId) {
-        UserDTO result = userService.setUserImage(userId, imageId);
+    public ResponseEntity<HTTPResponse> setUserImage(@PathVariable("user_id") Long userId, @PathVariable("image_id") Long imageId, Authentication connectedUser) {
+        UserDTO result = userService.setUserImage(userId, imageId, connectedUser);
 
         return ResponseEntity.ok(
                 HTTPResponse
@@ -150,8 +151,8 @@ public class UserController {
     }
 
     @PatchMapping("/remove-image/id={user_id}")
-    public ResponseEntity<HTTPResponse> removeUserImage(@PathVariable("user_id") Long userId) {
-        UserDTO result = userService.removeUserImage(userId);
+    public ResponseEntity<HTTPResponse> removeUserImage(@PathVariable("user_id") Long userId, Authentication connectedUser) {
+        UserDTO result = userService.removeUserImage(userId, connectedUser);
 
         return ResponseEntity.ok(
                 HTTPResponse

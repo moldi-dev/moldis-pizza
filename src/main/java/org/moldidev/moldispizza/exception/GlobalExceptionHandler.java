@@ -65,7 +65,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, response.getStatus());
     }
 
-    @ExceptionHandler({MailAuthenticationException.class, BadCredentialsException.class, SignatureException.class, ExpiredJwtException.class, InsufficientAuthenticationException.class, AccessDeniedException.class, DisabledException.class, LockedException.class})
+    @ExceptionHandler({OperationNotPermittedException.class, MailAuthenticationException.class, BadCredentialsException.class, SignatureException.class, ExpiredJwtException.class, InsufficientAuthenticationException.class, AccessDeniedException.class, DisabledException.class, LockedException.class})
     public ResponseEntity<HTTPResponse> handleSecurityExceptions(Exception exception, WebRequest request) {
         HTTPResponse response = HTTPResponse.builder().build();
         HttpStatus status = null;
@@ -90,7 +90,7 @@ public class GlobalExceptionHandler {
             status = HttpStatus.UNAUTHORIZED;
         }
 
-        else if (exception instanceof InsufficientAuthenticationException || exception instanceof AccessDeniedException) {
+        else if (exception instanceof InsufficientAuthenticationException || exception instanceof AccessDeniedException || exception instanceof OperationNotPermittedException) {
             response.setMessage("You are not authorized to access this resource");
             status = HttpStatus.FORBIDDEN;
         }

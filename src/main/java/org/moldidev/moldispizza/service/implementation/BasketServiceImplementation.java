@@ -9,9 +9,11 @@ import org.moldidev.moldispizza.mapper.BasketDTOMapper;
 import org.moldidev.moldispizza.repository.BasketRepository;
 import org.moldidev.moldispizza.repository.PizzaRepository;
 import org.moldidev.moldispizza.service.BasketService;
+import org.moldidev.moldispizza.service.SecurityService;
 import org.moldidev.moldispizza.validation.ObjectValidator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ public class BasketServiceImplementation implements BasketService {
     private final BasketDTOMapper basketDTOMapper;
     private final ObjectValidator<Basket> objectValidator;
     private final PizzaRepository pizzaRepository;
+    private final SecurityService securityService;
 
     @Override
     public BasketDTO save(Basket basket) {
@@ -40,7 +43,9 @@ public class BasketServiceImplementation implements BasketService {
     }
 
     @Override
-    public BasketDTO findByUserId(Long userId) {
+    public BasketDTO findByUserId(Long userId, Authentication connectedUser) {
+        securityService.validateAuthenticatedUser(connectedUser, userId);
+
         Basket foundBasket = basketRepository.findByUserUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Basket not found by user id " + userId));
 
@@ -73,7 +78,9 @@ public class BasketServiceImplementation implements BasketService {
     }
 
     @Override
-    public BasketDTO addPizzaToUserBasket(Long userId, Long pizzaId) {
+    public BasketDTO addPizzaToUserBasket(Long userId, Long pizzaId, Authentication connectedUser) {
+        securityService.validateAuthenticatedUser(connectedUser, userId);
+
         Basket foundBasket = basketRepository.findByUserUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Basket not found by user id " + userId));
 
@@ -87,7 +94,9 @@ public class BasketServiceImplementation implements BasketService {
     }
 
     @Override
-    public BasketDTO removePizzaFromUserBasket(Long userId, Long pizzaId) {
+    public BasketDTO removePizzaFromUserBasket(Long userId, Long pizzaId, Authentication connectedUser) {
+        securityService.validateAuthenticatedUser(connectedUser, userId);
+
         Basket foundBasket = basketRepository.findByUserUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Basket not found by user id " + userId));
 

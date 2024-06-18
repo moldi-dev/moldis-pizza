@@ -8,6 +8,7 @@ import org.moldidev.moldispizza.service.BasketService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -53,8 +54,8 @@ public class BasketController {
     }
 
     @GetMapping("/user-id={user_id}")
-    public ResponseEntity<HTTPResponse> findByUserId(@PathVariable("user_id") Long userId) {
-        BasketDTO result = basketService.findByUserId(userId);
+    public ResponseEntity<HTTPResponse> findByUserId(@PathVariable("user_id") Long userId, Authentication connectedUser) {
+        BasketDTO result = basketService.findByUserId(userId, connectedUser);
 
         return ResponseEntity.ok(
                 HTTPResponse
@@ -100,8 +101,8 @@ public class BasketController {
     }
 
     @PatchMapping("/add-pizza/user-id={user_id}/pizza-id={pizza_id}")
-    public ResponseEntity<HTTPResponse> addPizzaToUserBasket(@PathVariable("user_id") Long userId, @PathVariable("pizza_id") Long pizzaId) {
-        BasketDTO result = basketService.addPizzaToUserBasket(userId, pizzaId);
+    public ResponseEntity<HTTPResponse> addPizzaToUserBasket(@PathVariable("user_id") Long userId, @PathVariable("pizza_id") Long pizzaId, Authentication connectedUser) {
+        BasketDTO result = basketService.addPizzaToUserBasket(userId, pizzaId, connectedUser);
 
         return ResponseEntity.ok(
                 HTTPResponse
@@ -116,8 +117,8 @@ public class BasketController {
     }
 
     @PatchMapping("/remove-pizza/user-id={user_id}/pizza_id={pizza_id}")
-    public ResponseEntity<HTTPResponse> removePizzaFromUserBasket(@PathVariable("user_id") Long userId, @PathVariable("pizza_id") Long pizzaId) {
-        BasketDTO result = basketService.removePizzaFromUserBasket(userId, pizzaId);
+    public ResponseEntity<HTTPResponse> removePizzaFromUserBasket(@PathVariable("user_id") Long userId, @PathVariable("pizza_id") Long pizzaId, Authentication connectedUser) {
+        BasketDTO result = basketService.removePizzaFromUserBasket(userId, pizzaId, connectedUser);
 
         return ResponseEntity.ok(
                 HTTPResponse

@@ -8,9 +8,7 @@ import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.UserDTOMapper;
 import org.moldidev.moldispizza.repository.*;
-import org.moldidev.moldispizza.service.EmailService;
-import org.moldidev.moldispizza.service.ImageService;
-import org.moldidev.moldispizza.service.UserService;
+import org.moldidev.moldispizza.service.*;
 import org.moldidev.moldispizza.validation.ObjectValidator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,15 +16,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Transactional
@@ -43,6 +40,8 @@ public class UserServiceImplementation implements UserService {
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
     private final ObjectValidator<User> objectValidator;
+    private final SecurityService securityService;
+    private final JWTService jwtService;
 
     @Override
     public UserDTO save(User user) {
@@ -84,6 +83,34 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
+    public Map<String, String> signIn(Map<String, Object> credentials) {
+        String username = (String) credentials.get("username");
+        String password = (String) credentials.get("password");
+        boolean rememberMe = Boolean.parseBoolean((String) credentials.get("rememberMe"));
+
+        User authenticatedUser = authenticate(username, password);
+
+        String accessToken = jwtService.generateToken(authenticatedUser, 1000L * 60 * 60); // 60 minutes = one hour
+        String refreshToken = jwtService.generateToken(authenticatedUser, 1000L * 60 * 60 * 24); // 24 hours = one day
+        String rememberMeToken = null;
+
+        if (rememberMe) {
+            rememberMeToken = jwtService.generateToken(authenticatedUser, 1000L * 60 * 60 * 24 * 30); // 30 days = one month
+        }
+
+        Map<String, String> tokens = new HashMap<>();
+
+        tokens.put("accessToken", accessToken);
+        tokens.put("refreshToken", refreshToken);
+
+        if (rememberMeToken != null) {
+            tokens.put("rememberMeToken", rememberMeToken);
+        }
+
+        return tokens;
+    }
+
+    @Override
     public User authenticate(String username, String password) {
         User foundUser = userRepository.findByUsername(username)
                         .orElseThrow(() -> new ResourceNotFoundException("Invalid credentials"));
@@ -102,9 +129,11 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public UserDTO findByUsername(String username) {
+    public UserDTO findByUsername(String username, Authentication connectedUser) {
         User foundUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found by username " + username));
+
+        securityService.validateAuthenticatedUser(connectedUser, foundUser.getUserId());
 
         return userDTOMapper.apply(foundUser);
     }
@@ -157,7 +186,9 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public UserDTO setUserImage(Long userId, Long imageId) {
+    public UserDTO setUserImage(Long userId, Long imageId, Authentication connectedUser) {
+        securityService.validateAuthenticatedUser(connectedUser, userId);
+
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found by id " + userId));
 
@@ -170,7 +201,9 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public UserDTO removeUserImage(Long userId) {
+    public UserDTO removeUserImage(Long userId, Authentication connectedUser) {
+        securityService.validateAuthenticatedUser(connectedUser, userId);
+
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found by id " + userId));
 
@@ -186,7 +219,9 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public UserDTO updateById(Long userId, User updatedUser) {
+    public UserDTO updateById(Long userId, User updatedUser, Authentication connectedUser) {
+        securityService.validateAuthenticatedUser(connectedUser, userId);
+
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found by id " + userId));
 
@@ -195,23 +230,10 @@ public class UserServiceImplementation implements UserService {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
         foundUser.setPassword(encoder.encode(updatedUser.getPassword()));
-        foundUser.setEmail(updatedUser.getEmail());
         foundUser.setImage(updatedUser.getImage());
         foundUser.setFirstName(updatedUser.getFirstName());
         foundUser.setLastName(updatedUser.getLastName());
         foundUser.setAddress(updatedUser.getAddress());
-
-        if (updatedUser.getRole() != null) {
-            foundUser.setRole(updatedUser.getRole());
-        }
-
-        if (updatedUser.getIsLocked() != null) {
-            foundUser.setIsLocked(updatedUser.getIsLocked());
-        }
-
-        if (updatedUser.getIsEnabled() != null) {
-            foundUser.setIsEnabled(updatedUser.getIsEnabled());
-        }
 
         return userDTOMapper.apply(userRepository.save(foundUser));
     }

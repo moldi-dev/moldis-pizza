@@ -8,9 +8,11 @@ import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.ReviewDTOMapper;
 import org.moldidev.moldispizza.repository.ReviewRepository;
 import org.moldidev.moldispizza.service.ReviewService;
+import org.moldidev.moldispizza.service.SecurityService;
 import org.moldidev.moldispizza.validation.ObjectValidator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ public class ReviewServiceImplementation implements ReviewService {
     private final ReviewRepository reviewRepository;
     private final ReviewDTOMapper reviewDTOMapper;
     private final ObjectValidator<Review> objectValidator;
+    private final SecurityService securityService;
 
     @Override
     public ReviewDTO save(Review review) {
@@ -79,9 +82,11 @@ public class ReviewServiceImplementation implements ReviewService {
     }
 
     @Override
-    public ReviewDTO updateById(Long reviewId, Review updatedReview) {
+    public ReviewDTO updateById(Long reviewId, Review updatedReview, Authentication connectedUser) {
         Review foundReview = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("No review found by id " + reviewId));
+
+        securityService.validateAuthenticatedUser(connectedUser, foundReview.getUser().getUserId());
 
         objectValidator.validate(updatedReview);
 
@@ -94,9 +99,11 @@ public class ReviewServiceImplementation implements ReviewService {
     }
 
     @Override
-    public void deleteById(Long reviewId) {
+    public void deleteById(Long reviewId, Authentication connectedUser) {
         Review foundReview = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("No review found by id " + reviewId));
+
+        securityService.validateAuthenticatedUser(connectedUser, foundReview.getUser().getUserId());
 
         reviewRepository.delete(foundReview);
     }
