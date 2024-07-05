@@ -116,7 +116,7 @@ public class BasketController {
         );
     }
 
-    @PatchMapping("/remove-pizza/user-id={user_id}/pizza_id={pizza_id}")
+    @PatchMapping("/remove-pizza/user-id={user_id}/pizza-id={pizza_id}")
     public ResponseEntity<HTTPResponse> removePizzaFromUserBasket(@PathVariable("user_id") Long userId, @PathVariable("pizza_id") Long pizzaId, Authentication connectedUser) {
         BasketDTO result = basketService.removePizzaFromUserBasket(userId, pizzaId, connectedUser);
 

@@ -111,7 +111,7 @@ public class ImageController {
         );
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<HTTPResponse> save(@RequestBody MultipartFile image) {
         ImageDTO result = imageService.save(image);
 

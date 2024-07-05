@@ -33,6 +33,6 @@ public class Pizza extends Auditable {
 
     @Column(name = "price")
     @DecimalMin(value = "0.0", inclusive = false, message = "The pizza's price must be positive")
-    @NotNull(message = "The total price is required")
+    @NotNull(message = "The price is required")
     private Double price;
 }

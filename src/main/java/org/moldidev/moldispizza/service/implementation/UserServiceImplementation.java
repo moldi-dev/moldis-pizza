@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.UserDTO;
 import org.moldidev.moldispizza.entity.*;
 import org.moldidev.moldispizza.enumeration.Role;
+import org.moldidev.moldispizza.exception.ObjectNotValidException;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.UserDTOMapper;
@@ -220,6 +221,8 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public UserDTO updateById(Long userId, User updatedUser, Authentication connectedUser) {
+        HashSet<String> validationErrors = new HashSet<>();
+
         securityService.validateAuthenticatedUser(connectedUser, userId);
 
         User foundUser = userRepository.findById(userId)
@@ -228,9 +231,18 @@ public class UserServiceImplementation implements UserService {
         objectValidator.validate(updatedUser);
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        String givenPassword = updatedUser.getPassword();
+        String foundPassword = foundUser.getPassword();
 
-        foundUser.setPassword(encoder.encode(updatedUser.getPassword()));
-        foundUser.setImage(updatedUser.getImage());
+        if (!encoder.matches(givenPassword, foundPassword)) {
+            validationErrors.add("Invalid password entered");
+            throw new ObjectNotValidException(validationErrors);
+        }
+
+        if (updatedUser.getImage() != null) {
+            foundUser.setImage(updatedUser.getImage());
+        }
+
         foundUser.setFirstName(updatedUser.getFirstName());
         foundUser.setLastName(updatedUser.getLastName());
         foundUser.setAddress(updatedUser.getAddress());

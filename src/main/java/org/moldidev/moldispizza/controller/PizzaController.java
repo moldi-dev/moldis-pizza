@@ -116,8 +116,8 @@ public class PizzaController {
     }
 
     @PatchMapping("/remove-image/id={pizza_id}/image-id={image_id}")
-    public ResponseEntity<HTTPResponse> removeImageFromPizza(@PathVariable("pizza_id") Long pizzaId, @PathVariable("image_id") Long id) {
-        PizzaDTO result = pizzaService.removeImage(pizzaId, id);
+    public ResponseEntity<HTTPResponse> removeImageFromPizza(@PathVariable("pizza_id") Long pizzaId, @PathVariable("image_id") Long imageId) {
+        PizzaDTO result = pizzaService.removeImage(pizzaId, imageId);
 
         return ResponseEntity.ok(
                 HTTPResponse
