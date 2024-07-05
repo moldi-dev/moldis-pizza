@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class EmailService {
+
     private final JavaMailSender javaMailSender;
 
     public EmailService(JavaMailSender javaMailSender) {
@@ -20,8 +21,8 @@ public class EmailService {
         String link = "http://localhost:8080/api/v1/users/verify?email=" + to + "&token=" + verificationToken;
 
         email.setTo(to);
-        email.setFrom("moldispizza@outlook.com");
-        email.setSubject("Complete your registration");
+        email.setFrom("MS_LANYBX@trial-v69oxl5dj9k4785k.mlsender.net");
+        email.setSubject("Complete your registration for Moldi's Pizza");
         email.setText("To confirm your account, please click here: " + link);
 
         javaMailSender.send(email);
