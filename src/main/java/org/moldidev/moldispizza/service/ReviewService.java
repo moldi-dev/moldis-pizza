@@ -17,7 +17,11 @@ public interface ReviewService {
     Page<ReviewDTO> findAllByUserId(Long userId, int page, int size);
     Page<ReviewDTO> findAllByPizzaId(Long pizzaId, int page, int size);
 
-    ReviewDTO updateById(Long reviewId, Review updatedReview, Authentication authentication);
+    Boolean hasUserReviewedThePizza(Long userId, Long pizzaId, Authentication connectedUser);
 
-    void deleteById(Long reviewId, Authentication authentication);
+    ReviewDTO postReviewByUserIdAndPizzaId(Long userId, Long pizzaId, Integer rating, String comment, Authentication connectedUser);
+
+    ReviewDTO updateById(Long reviewId, Review updatedReview, Authentication connectedUser);
+
+    void deleteById(Long reviewId, Authentication connectedUser);
 }

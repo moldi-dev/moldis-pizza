@@ -78,6 +78,13 @@ public class OrderServiceImplementation implements OrderService {
     }
 
     @Override
+    public Boolean hasUserBoughtThePizza(Long userId, Long pizzaId, Authentication connectedUser) {
+        securityService.validateAuthenticatedUser(connectedUser, userId);
+
+        return orderRepository.existsByUserUserIdAndPizzasPizzaId(userId, pizzaId);
+    }
+
+    @Override
     public OrderDTO updateById(Long orderId, Order updatedOrder) {
         Order foundOrder = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("The order by the provided id doesn't exist"));

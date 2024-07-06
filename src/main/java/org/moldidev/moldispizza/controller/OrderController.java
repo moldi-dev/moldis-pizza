@@ -68,6 +68,18 @@ public class OrderController {
         );
     }
 
+    @GetMapping("/user-id={userId}/pizza-id={pizzaId}")
+    public ResponseEntity<HTTPResponse> hasUserBoughtThePizza(@PathVariable("userId") Long userId, @PathVariable("pizzaId") Long pizzaId, Authentication connectedUser) {
+        Boolean result = orderService.hasUserBoughtThePizza(userId, pizzaId, connectedUser);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("answer", result))
+                        .build()
+        );
+    }
+
     @PostMapping
     public ResponseEntity<HTTPResponse> save(@RequestBody Order order) {
         OrderDTO result = orderService.save(order);

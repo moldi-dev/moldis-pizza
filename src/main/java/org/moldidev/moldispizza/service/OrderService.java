@@ -16,6 +16,8 @@ public interface OrderService {
     Page<OrderDTO> findAll(int page, int size);
     Page<OrderDTO> findAllByUserId(Long userId, int page, int size, Authentication connectedUser);
 
+    Boolean hasUserBoughtThePizza(Long userId, Long pizzaId, Authentication connectedUser);
+
     OrderDTO updateById(Long orderId, Order updatedOrder);
 
     OrderDTO placeOrderByUserBasket(Long userId, Authentication connectedUser);

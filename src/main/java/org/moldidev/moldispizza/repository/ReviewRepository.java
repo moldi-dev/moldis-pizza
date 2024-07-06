@@ -8,7 +8,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
-    Long countReviewsByUserUserIdAndPizzaPizzaId(Long userId, Long pizzaId);
+    Boolean existsReviewByUserUserIdAndPizzaPizzaId(Long userId, Long pizzaId);
+
     Page<Review> findAllByUserUserId(Long userId, Pageable pageable);
     Page<Review> findAllByPizzaPizzaId(Long pizzaId, Pageable pageable);
 }

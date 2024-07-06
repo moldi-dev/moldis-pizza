@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
     Page<Order> findAllByUserUserId(Long userId, Pageable pageable);
+
+    Boolean existsByUserUserIdAndPizzasPizzaId(Long userId, Long pizzaId);
 }

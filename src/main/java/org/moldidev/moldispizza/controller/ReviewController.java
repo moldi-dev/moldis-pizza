@@ -83,6 +83,18 @@ public class ReviewController {
         );
     }
 
+    @GetMapping("/user-id={userId}/pizza-id={pizzaId}")
+    public ResponseEntity<HTTPResponse> hasUserReviewedThePizza(@PathVariable("userId") Long userId, @PathVariable("pizzaId") Long pizzaId, Authentication connectedUser) {
+        Boolean result = reviewService.hasUserReviewedThePizza(userId, pizzaId, connectedUser);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("answer", result))
+                        .build()
+        );
+    }
+
     @PostMapping
     public ResponseEntity<HTTPResponse> save(@RequestBody Review review) {
         ReviewDTO result = reviewService.save(review);
@@ -92,6 +104,22 @@ public class ReviewController {
                         .builder()
                         .message("Review created successfully")
                         .data(Map.of("reviewsDTOs", result))
+                        .status(HttpStatus.CREATED)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.CREATED.value())
+                        .build()
+        );
+    }
+
+    @PostMapping("/user-id={userId}/pizza-id={pizzaId}")
+    public ResponseEntity<HTTPResponse> postReviewByUserIdAndPizzaId(@PathVariable Long userId, @PathVariable Long pizzaId, @RequestBody Map<String, String> content, Authentication connectedUser) {
+        ReviewDTO result = reviewService.postReviewByUserIdAndPizzaId(userId, pizzaId, Integer.parseInt(content.get("rating")), content.get("comment"), connectedUser);
+
+        return ResponseEntity.created(URI.create("")).body(
+                HTTPResponse
+                        .builder()
+                        .message("Review added successfully")
+                        .data(Map.of("reviewDTO", result))
                         .status(HttpStatus.CREATED)
                         .timestamp(LocalDateTime.now().toString())
                         .statusCode(HttpStatus.CREATED.value())
