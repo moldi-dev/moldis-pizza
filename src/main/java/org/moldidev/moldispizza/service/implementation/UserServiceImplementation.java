@@ -5,6 +5,7 @@ import org.moldidev.moldispizza.dto.UserDTO;
 import org.moldidev.moldispizza.entity.*;
 import org.moldidev.moldispizza.enumeration.Role;
 import org.moldidev.moldispizza.exception.ObjectNotValidException;
+import org.moldidev.moldispizza.exception.OperationNotPermittedException;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.UserDTOMapper;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -224,6 +226,23 @@ public class UserServiceImplementation implements UserService {
 
         foundUser.setPassword(encoder.encode(newPassword));
 
+        return userDTOMapper.apply(userRepository.save(foundUser));
+    }
+
+    @Override
+    public UserDTO changePasswordById(Long userId, String currentPassword, String newPassword, Authentication connectedUser) {
+        securityService.validateAuthenticatedUser(connectedUser, userId);
+
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
+
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
+        if (!encoder.matches(currentPassword, foundUser.getPassword())) {
+            throw new BadCredentialsException("Invalid current password provided");
+        }
+
+        foundUser.setPassword(encoder.encode(newPassword));
         return userDTOMapper.apply(userRepository.save(foundUser));
     }
 

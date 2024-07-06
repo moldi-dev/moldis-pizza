@@ -164,6 +164,22 @@ public class UserController {
         );
     }
 
+    @PostMapping("/change-password/id={id}")
+    public ResponseEntity<HTTPResponse> changePasswordById(@PathVariable("id") Long userId, @RequestBody Map<String, String> passwordMap, Authentication connectedUser) {
+        UserDTO result = userService.changePasswordById(userId, passwordMap.get("currentPassword"), passwordMap.get("newPassword"), connectedUser);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("Your password has been changed successfully")
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .data(Map.of("userDTO", result))
+                        .build()
+        );
+    }
+
     @PatchMapping("/id={id}")
     public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long userId, @RequestBody User updatedUser, Authentication connectedUser) {
         UserDTO result = userService.updateById(userId, updatedUser, connectedUser);

@@ -28,6 +28,7 @@ public interface UserService {
     void resendConfirmationEmail(String email);
     void sendResetPasswordEmail(String email);
     UserDTO resetPasswordThroughToken(String token, String newPassword);
+    UserDTO changePasswordById(Long userId, String currentPassword, String newPassword, Authentication connectedUser);
 
     UserDTO setUserImage(Long userId, Long imageId, Authentication connectedUser);
     UserDTO removeUserImage(Long userId, Authentication connectedUser);
