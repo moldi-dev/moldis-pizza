@@ -10,9 +10,10 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByUsername(String username);
-    Optional<User> findByEmail(String email);
+    Optional<User> findByUsernameIgnoreCase(String username);
+    Optional<User> findByEmailIgnoreCase(String email);
     Optional<User> findByVerificationToken(String verificationToken);
+    Optional<User> findByResetPasswordToken(String resetPasswordToken);
 
     @Query(value = "SELECT u.* FROM public.users AS u " +
             "JOIN public.images AS i ON u.image_id = i.image_id " +

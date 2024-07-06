@@ -74,7 +74,7 @@ public class ImageServiceImplementation implements ImageService {
     @Override
     public String findById(Long imageId) {
         Image foundImage = imageRepository.findById(imageId)
-                .orElseThrow(() -> new ResourceNotFoundException("Image not found by id " + imageId));
+                .orElseThrow(() -> new ResourceNotFoundException("The image by the provided id doesn't exist"));
 
         Path path = Paths.get(foundImage.getUrl());
 
@@ -91,7 +91,7 @@ public class ImageServiceImplementation implements ImageService {
     @Override
     public String findByUrl(String url) {
         Image foundImage = imageRepository.findByUrl(url)
-                .orElseThrow(() -> new ResourceNotFoundException("Image not found by url " + url));
+                .orElseThrow(() -> new ResourceNotFoundException("The image by the provided url doesn't exist"));
 
         Path path = Paths.get(foundImage.getUrl());
 
@@ -108,7 +108,7 @@ public class ImageServiceImplementation implements ImageService {
     @Override
     public String findByUserId(Long userId) {
         Image foundImage = imageRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Image not found by user id " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("The image by the provided user id doesn't exist"));
 
         Path path = Paths.get(foundImage.getUrl());
 
@@ -127,7 +127,7 @@ public class ImageServiceImplementation implements ImageService {
         Page<Image> images = imageRepository.findAll(PageRequest.of(page, size));
 
         if (images.isEmpty()) {
-            throw new ResourceNotFoundException("No images found");
+            throw new ResourceNotFoundException("No images exist");
         }
 
         return images.map(imageDTOMapper);
@@ -138,7 +138,7 @@ public class ImageServiceImplementation implements ImageService {
         Page<Image> images = imageRepository.findAllByType(type, PageRequest.of(page, size));
 
         if (images.isEmpty()) {
-            throw new ResourceNotFoundException("No images found by type " + type);
+            throw new ResourceNotFoundException("No images exist by the provided type");
         }
 
         return images.map(imageDTOMapper);
@@ -149,7 +149,7 @@ public class ImageServiceImplementation implements ImageService {
         List<Image> images = imageRepository.findAllByPizzaId(pizzaId);
 
         if (images.isEmpty()) {
-            throw new ResourceNotFoundException("No images found by pizza id " + pizzaId);
+            throw new ResourceNotFoundException("No images exist by the provided pizza id");
         }
 
         return images
@@ -161,7 +161,7 @@ public class ImageServiceImplementation implements ImageService {
     @Override
     public ImageDTO updateById(Long imageId, MultipartFile updatedImage) {
         Image foundImage = imageRepository.findById(imageId)
-                .orElseThrow(() -> new ResourceNotFoundException("Image not found by id " + imageId));
+                .orElseThrow(() -> new ResourceNotFoundException("The image by the provided id doesn't exist"));
 
         HashSet<String> violations = new HashSet<>();
 
@@ -224,7 +224,7 @@ public class ImageServiceImplementation implements ImageService {
     @Override
     public void deleteById(Long imageId) {
         Image foundImage = imageRepository.findById(imageId)
-                .orElseThrow(() -> new ResourceNotFoundException("Image not found by id " + imageId));
+                .orElseThrow(() -> new ResourceNotFoundException("The image by the provided id doesn't exist"));
 
         Optional<User> userWithImage = userRepository.findByImageId(imageId);
         Optional<Pizza> pizzaWithImage = pizzaRepository.findByImageId(imageId);

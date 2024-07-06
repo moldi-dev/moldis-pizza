@@ -25,6 +25,9 @@ public interface UserService {
     Page<UserDTO> findAll(int page, int size);
 
     ResponseEntity<String> verifyByVerificationToken(String email, String verificationToken);
+    void resendConfirmationEmail(String email);
+    void sendResetPasswordEmail(String email);
+    UserDTO resetPasswordThroughToken(String token, String newPassword);
 
     UserDTO setUserImage(Long userId, Long imageId, Authentication connectedUser);
     UserDTO removeUserImage(Long userId, Authentication connectedUser);

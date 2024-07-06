@@ -47,17 +47,23 @@ public class UserServiceImplementation implements UserService {
     @Override
     public UserDTO save(User user) {
         objectValidator.validate(user);
+        HashSet<String> validationErrors = new HashSet<>();
 
-        Optional<User> foundUser = userRepository.findByUsername(user.getUsername());
+        Optional<User> foundUser = userRepository.findByUsernameIgnoreCase(user.getUsername());
 
         if (foundUser.isPresent()) {
-            throw new ResourceAlreadyExistsException("User " + user.getUsername() + " already exists");
+            throw new ResourceAlreadyExistsException("This username is already taken");
         }
 
-        Optional<User> foundUserByEmail = userRepository.findByEmail(user.getEmail());
+        Optional<User> foundUserByEmail = userRepository.findByEmailIgnoreCase(user.getEmail());
 
         if (foundUserByEmail.isPresent()) {
-            throw new ResourceAlreadyExistsException("Email " + user.getEmail() + " is already taken");
+            throw new ResourceAlreadyExistsException("This email address is already taken");
+        }
+
+        if (user.getPassword().length() < 8) {
+            validationErrors.add("The password must be at least 8 characters long");
+            throw new ObjectNotValidException(validationErrors);
         }
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
@@ -113,8 +119,8 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public User authenticate(String username, String password) {
-        User foundUser = userRepository.findByUsername(username)
-                        .orElseThrow(() -> new ResourceNotFoundException("Invalid credentials"));
+        User foundUser = userRepository.findByUsernameIgnoreCase(username)
+                        .orElseThrow(() -> new ResourceNotFoundException("Invalid credentials provided"));
 
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 
@@ -124,15 +130,15 @@ public class UserServiceImplementation implements UserService {
     @Override
     public UserDTO findById(Long userId) {
         User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found by id " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
 
         return userDTOMapper.apply(foundUser);
     }
 
     @Override
     public UserDTO findByUsername(String username, Authentication connectedUser) {
-        User foundUser = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found by username " + username));
+        User foundUser = userRepository.findByUsernameIgnoreCase(username)
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided username doesn't exist"));
 
         securityService.validateAuthenticatedUser(connectedUser, foundUser.getUserId());
 
@@ -141,8 +147,8 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public UserDTO findByEmail(String email) {
-        User foundUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found by email " + email));
+        User foundUser = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided email doesn't exis"));
 
         return userDTOMapper.apply(foundUser);
     }
@@ -150,7 +156,7 @@ public class UserServiceImplementation implements UserService {
     @Override
     public UserDTO findByVerificationToken(String verificationToken) {
         User foundUser = userRepository.findByVerificationToken(verificationToken)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found by verification code " + verificationToken));
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided verification code doesn't exist"));
 
         return userDTOMapper.apply(foundUser);
     }
@@ -160,7 +166,7 @@ public class UserServiceImplementation implements UserService {
         Page<User> users = userRepository.findAll(PageRequest.of(page, size));
 
         if (users.isEmpty()) {
-            throw new ResourceNotFoundException("No users found");
+            throw new ResourceNotFoundException("No users exist");
         }
 
         return users.map(userDTOMapper);
@@ -168,8 +174,8 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public ResponseEntity<String> verifyByVerificationToken(String email, String verificationToken) {
-        User foundUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found by email " + email));
+        User foundUser = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided email doesn't exist"));
 
         if (foundUser.getIsEnabled()) {
             return new ResponseEntity<>("Your account is already verified", HttpStatus.CONFLICT);
@@ -178,7 +184,7 @@ public class UserServiceImplementation implements UserService {
         if (foundUser.getVerificationToken().equals(verificationToken)) {
             foundUser.setIsEnabled(true);
             userRepository.save(foundUser);
-            return new ResponseEntity<>("Your account has been successfully verified. You can now log in", HttpStatus.OK);
+            return new ResponseEntity<>("Your account has been successfully verified. You may now sign in", HttpStatus.OK);
         }
 
         else {
@@ -187,14 +193,49 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
+    public void resendConfirmationEmail(String email) {
+        User foundUser = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided email doesn't exist"));
+
+        if (foundUser.getIsEnabled()) {
+            throw new ResourceAlreadyExistsException("This user is already verified");
+        }
+
+        emailService.sendCompleteRegistrationEmail(foundUser.getEmail(), foundUser.getVerificationToken());
+    }
+
+    @Override
+    public void sendResetPasswordEmail(String email) {
+        User foundUser = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided email doesn't exist"));
+
+        foundUser.setResetPasswordToken(generateResetPasswordToken(foundUser));
+        userRepository.save(foundUser);
+
+        emailService.sendResetPasswordEmail(foundUser.getEmail(), foundUser.getResetPasswordToken());
+    }
+
+    @Override
+    public UserDTO resetPasswordThroughToken(String token, String newPassword) {
+        User foundUser = userRepository.findByResetPasswordToken(token)
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided token doesn't exist"));
+
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
+        foundUser.setPassword(encoder.encode(newPassword));
+
+        return userDTOMapper.apply(userRepository.save(foundUser));
+    }
+
+    @Override
     public UserDTO setUserImage(Long userId, Long imageId, Authentication connectedUser) {
         securityService.validateAuthenticatedUser(connectedUser, userId);
 
         User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found by id " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
 
         Image foundImage = imageRepository.findById(imageId)
-                .orElseThrow(() -> new ResourceNotFoundException("Image not found by id " + imageId));
+                .orElseThrow(() -> new ResourceNotFoundException("The image by the provided id doesn't exist"));
 
         foundUser.setImage(foundImage);
 
@@ -206,7 +247,7 @@ public class UserServiceImplementation implements UserService {
         securityService.validateAuthenticatedUser(connectedUser, userId);
 
         User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found by id " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
 
         Image userImage = foundUser.getImage();
 
@@ -216,7 +257,7 @@ public class UserServiceImplementation implements UserService {
             return userDTOMapper.apply(userRepository.save(foundUser));
         }
 
-        throw new ResourceNotFoundException("User " + userId + " has no image");
+        throw new ResourceNotFoundException("This user has no image");
     }
 
     @Override
@@ -226,7 +267,7 @@ public class UserServiceImplementation implements UserService {
         securityService.validateAuthenticatedUser(connectedUser, userId);
 
         User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found by id " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
 
         objectValidator.validate(updatedUser);
 
@@ -235,7 +276,7 @@ public class UserServiceImplementation implements UserService {
         String foundPassword = foundUser.getPassword();
 
         if (!encoder.matches(givenPassword, foundPassword)) {
-            validationErrors.add("Invalid password entered");
+            validationErrors.add("Invalid password provided");
             throw new ObjectNotValidException(validationErrors);
         }
 
@@ -253,7 +294,7 @@ public class UserServiceImplementation implements UserService {
     @Override
     public void deleteById(Long userId) {
         User foundUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found by id " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
 
         Page<Order> foundUserOrders = orderRepository.findAllByUserUserId(userId, null);
         Page<Review> foundUserReviews = reviewRepository.findAllByUserUserId(userId, null);
@@ -290,6 +331,26 @@ public class UserServiceImplementation implements UserService {
             }
 
             return hashHex.toString();
+        }
+
+        catch (NoSuchAlgorithmException e) {
+            return null;
+        }
+    }
+
+    private String generateResetPasswordToken(User user) {
+        UUID uuid = UUID.randomUUID();
+        String username = user.getUsername();
+        String resetPasswordCode = uuid + username;
+
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(resetPasswordCode.getBytes());
+
+            String base64Encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(hashBytes);
+
+
+            return base64Encoded.substring(0, 22);
         }
 
         catch (NoSuchAlgorithmException e) {

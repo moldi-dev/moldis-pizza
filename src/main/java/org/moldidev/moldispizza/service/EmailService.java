@@ -23,7 +23,19 @@ public class EmailService {
         email.setTo(to);
         email.setFrom("MS_LANYBX@trial-v69oxl5dj9k4785k.mlsender.net");
         email.setSubject("Complete your registration for Moldi's Pizza");
-        email.setText("To confirm your account, please click here: " + link);
+        email.setText("If this was not you, please ignore this email. Otherwise, confirm your account by clicking here: " + link);
+
+        javaMailSender.send(email);
+    }
+
+    @Async
+    public void sendResetPasswordEmail(String to, String resetPasswordToken) {
+        SimpleMailMessage email = new SimpleMailMessage();
+
+        email.setTo(to);
+        email.setFrom("MS_LANYBX@trial-v69oxl5dj9k4785k.mlsender.net");
+        email.setSubject("Reset your password for Moldi's Pizza");
+        email.setText("If this was not you, please ignore this email. Otherwise, use this code to reset your account's password: " + resetPasswordToken);
 
         javaMailSender.send(email);
     }

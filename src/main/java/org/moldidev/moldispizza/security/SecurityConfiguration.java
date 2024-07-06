@@ -41,6 +41,9 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/users/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/users/remove-image/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/users/set-image/id=**/image-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/resend-confirmation-email/email=**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/send-reset-password-token/email=**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/reset-password/reset-password-token=**").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/pizzas**").permitAll()
 

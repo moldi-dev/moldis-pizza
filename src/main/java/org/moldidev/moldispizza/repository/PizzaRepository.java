@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface PizzaRepository extends JpaRepository<Pizza,Long> {
-    Optional<Pizza> findByName(String name);
+    Optional<Pizza> findByNameIgnoreCase(String name);
 
     @Query(value = "SELECT p.* FROM public.pizzas AS p " +
             "JOIN public.pizzas_images AS pi ON p.pizza_id = pi.pizza_pizza_id " +

@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.OrderDTO;
 import org.moldidev.moldispizza.entity.Basket;
 import org.moldidev.moldispizza.entity.Order;
+import org.moldidev.moldispizza.entity.User;
 import org.moldidev.moldispizza.enumeration.OrderStatus;
 import org.moldidev.moldispizza.exception.ObjectNotValidException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.OrderDTOMapper;
 import org.moldidev.moldispizza.repository.BasketRepository;
 import org.moldidev.moldispizza.repository.OrderRepository;
+import org.moldidev.moldispizza.repository.UserRepository;
 import org.moldidev.moldispizza.service.OrderService;
 import org.moldidev.moldispizza.service.SecurityService;
 import org.moldidev.moldispizza.validation.ObjectValidator;
@@ -32,6 +34,7 @@ public class OrderServiceImplementation implements OrderService {
     private final ObjectValidator<Order> objectValidator;
     private final BasketRepository basketRepository;
     private final SecurityService securityService;
+    private final UserRepository userRepository;
 
     @Override
     public OrderDTO save(Order order) {
@@ -42,7 +45,7 @@ public class OrderServiceImplementation implements OrderService {
     @Override
     public OrderDTO findById(Long orderId) {
         Order foundOrder = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found by id " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("The order by the provided id doesn't exist"));
 
         return orderDTOMapper.apply(foundOrder);
     }
@@ -52,7 +55,7 @@ public class OrderServiceImplementation implements OrderService {
         Page<Order> orders = orderRepository.findAll(PageRequest.of(page, size));
 
         if (orders.isEmpty()) {
-            throw new ResourceNotFoundException("No orders found");
+            throw new ResourceNotFoundException("No orders exist");
         }
 
         return orders.map(orderDTOMapper);
@@ -62,10 +65,13 @@ public class OrderServiceImplementation implements OrderService {
     public Page<OrderDTO> findAllByUserId(Long userId, int page, int size, Authentication connectedUser) {
         securityService.validateAuthenticatedUser(connectedUser, userId);
 
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
+
         Page<Order> orders = orderRepository.findAllByUserUserId(userId, PageRequest.of(page, size));
 
         if (orders.isEmpty()) {
-            throw new ResourceNotFoundException("No orders found by user id " + userId);
+            throw new ResourceNotFoundException("This user has no orders");
         }
 
         return orders.map(orderDTOMapper);
@@ -74,7 +80,7 @@ public class OrderServiceImplementation implements OrderService {
     @Override
     public OrderDTO updateById(Long orderId, Order updatedOrder) {
         Order foundOrder = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found by id " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("The order by the provided id doesn't exist"));
 
         objectValidator.validate(updatedOrder);
 
@@ -91,7 +97,7 @@ public class OrderServiceImplementation implements OrderService {
         securityService.validateAuthenticatedUser(connectedUser, userId);
 
         Basket foundBasket = basketRepository.findByUserUserId(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Basket not found by user id " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("The basket by the provided user id doesn't exist"));
 
         if (foundBasket.getPizzas().isEmpty()) {
             HashSet<String> violations = new HashSet<>();
@@ -117,7 +123,7 @@ public class OrderServiceImplementation implements OrderService {
     @Override
     public void deleteById(Long orderId) {
         Order foundOrder = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found by id " + orderId));
+                .orElseThrow(() -> new ResourceNotFoundException("The order by the provided id doesn't exist"));
 
         orderRepository.delete(foundOrder);
     }

@@ -35,10 +35,10 @@ public class PizzaServiceImplementation implements PizzaService {
     public PizzaDTO save(Pizza pizza) {
         objectValidator.validate(pizza);
 
-        Optional<Pizza> foundPizza = pizzaRepository.findByName(pizza.getName());
+        Optional<Pizza> foundPizza = pizzaRepository.findByNameIgnoreCase(pizza.getName());
 
         if (foundPizza.isPresent()) {
-            throw new ResourceAlreadyExistsException("Pizza " + pizza.getName() + " already exists");
+            throw new ResourceAlreadyExistsException("This pizza name is already taken");
         }
 
         return pizzaDTOMapper.apply(pizzaRepository.save(pizza));
@@ -47,15 +47,15 @@ public class PizzaServiceImplementation implements PizzaService {
     @Override
     public PizzaDTO findById(Long pizzaId) {
         Pizza foundPizza = pizzaRepository.findById(pizzaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Pizza not found by id " + pizzaId));
+                .orElseThrow(() -> new ResourceNotFoundException("The pizza by the provided id doesn't exist"));
 
         return pizzaDTOMapper.apply(foundPizza);
     }
 
     @Override
     public PizzaDTO findByName(String name) {
-        Pizza foundPizza = pizzaRepository.findByName(name)
-                .orElseThrow(() -> new ResourceNotFoundException("Pizza not found by name " + name));
+        Pizza foundPizza = pizzaRepository.findByNameIgnoreCase(name)
+                .orElseThrow(() -> new ResourceNotFoundException("The pizza by the provided name doesn't exist"));
 
         return pizzaDTOMapper.apply(foundPizza);
     }
@@ -65,7 +65,7 @@ public class PizzaServiceImplementation implements PizzaService {
         Page<Pizza> pizzas = pizzaRepository.findAll(PageRequest.of(page, size));
 
         if (pizzas.isEmpty()) {
-            throw new ResourceNotFoundException("No pizzas found");
+            throw new ResourceNotFoundException("No pizzas exist");
         }
 
         return pizzas.map(pizzaDTOMapper);
@@ -74,7 +74,7 @@ public class PizzaServiceImplementation implements PizzaService {
     @Override
     public PizzaDTO updateById(Long pizzaId, Pizza updatedPizza) {
         Pizza foundPizza = pizzaRepository.findById(pizzaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Pizza not found by id " + pizzaId));
+                .orElseThrow(() -> new ResourceNotFoundException("The pizza by the provided id doesn't exist"));
 
         objectValidator.validate(updatedPizza);
 
@@ -89,13 +89,13 @@ public class PizzaServiceImplementation implements PizzaService {
     @Override
     public PizzaDTO addImage(Long pizzaId, Long imageId) {
         Pizza foundPizza = pizzaRepository.findById(pizzaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Pizza not found by id " + pizzaId));
+                .orElseThrow(() -> new ResourceNotFoundException("The pizza by the provided id doesn't exist"));
 
         Image foundImage = imageRepository.findById(imageId)
-                .orElseThrow(() -> new ResourceNotFoundException("Image not found by id " + imageId));
+                .orElseThrow(() -> new ResourceNotFoundException("The image by the provided id doesn't exist"));
 
         if (foundPizza.getImages().contains(foundImage)) {
-            throw new ResourceAlreadyExistsException("Pizza " + foundPizza.getName() + " already has this image");
+            throw new ResourceAlreadyExistsException("The provided pizza already has this image");
         }
 
         foundPizza.getImages().add(foundImage);
@@ -106,13 +106,13 @@ public class PizzaServiceImplementation implements PizzaService {
     @Override
     public PizzaDTO removeImage(Long pizzaId, Long imageId) {
         Pizza foundPizza = pizzaRepository.findById(pizzaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Pizza not found by id " + pizzaId));
+                .orElseThrow(() -> new ResourceNotFoundException("The pizza by the provided id doesn't exist"));
 
         Image foundImage = imageRepository.findById(imageId)
-                .orElseThrow(() -> new ResourceNotFoundException("Image not found by id " + imageId));
+                .orElseThrow(() -> new ResourceNotFoundException("The image by the provided id doesn't exist"));
 
         if (!foundPizza.getImages().contains(foundImage)) {
-            throw new ResourceNotFoundException("Pizza " + foundPizza.getName() + " does not have this image");
+            throw new ResourceNotFoundException("The provided pizza doesn't contain this image");
         }
 
         imageService.delete(foundImage);
@@ -124,7 +124,7 @@ public class PizzaServiceImplementation implements PizzaService {
     @Override
     public void deleteById(Long pizzaId) {
         Pizza foundPizza = pizzaRepository.findById(pizzaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Pizza not found by id " + pizzaId));
+                .orElseThrow(() -> new ResourceNotFoundException("The pizza by the provided id doesn't exist"));
 
         List<Image> foundPizzaImages = imageRepository.findAllByPizzaId(pizzaId);
 

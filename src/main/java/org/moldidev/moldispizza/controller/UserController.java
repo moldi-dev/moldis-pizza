@@ -118,6 +118,52 @@ public class UserController {
         return userService.verifyByVerificationToken(email, token);
     }
 
+    @PostMapping("/resend-confirmation-email/email={email}")
+    public ResponseEntity<HTTPResponse> resendConfirmationEmail(@PathVariable("email") String email) {
+        userService.resendConfirmationEmail(email);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("The confirmation email has been sent again successfully")
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
+    }
+
+    @PostMapping("/send-reset-password-token/email={email}")
+    public ResponseEntity<HTTPResponse> sendResetPasswordToken(@PathVariable("email") String email) {
+        userService.sendResetPasswordEmail(email);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("The password reset code has been sent successfully")
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
+    }
+
+    @PostMapping("/reset-password/reset-password-token={token}")
+    public ResponseEntity<HTTPResponse> resetPasswordThroughToken(@PathVariable("token") String token, @RequestBody String newPassword) {
+        UserDTO result = userService.resetPasswordThroughToken(token, newPassword);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("The account's password has been reset successfully. You may now sign in")
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .data(Map.of("userDTO", result))
+                        .build()
+        );
+    }
+
     @PatchMapping("/id={id}")
     public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long userId, @RequestBody User updatedUser, Authentication connectedUser) {
         UserDTO result = userService.updateById(userId, updatedUser, connectedUser);

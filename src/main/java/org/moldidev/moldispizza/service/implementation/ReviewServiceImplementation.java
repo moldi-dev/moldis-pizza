@@ -34,7 +34,7 @@ public class ReviewServiceImplementation implements ReviewService {
                 .countReviewsByUserUserIdAndPizzaPizzaId(review.getUser().getUserId(), review.getPizza().getPizzaId()) > 0;
 
         if (hasUserAlreadyReviewedThePizza) {
-            throw new ResourceAlreadyExistsException("User " + review.getUser().getUsername() + " already reviewed the pizza " + review.getPizza().getName());
+            throw new ResourceAlreadyExistsException("This user already reviewed this pizza");
         }
 
         return reviewDTOMapper.apply(reviewRepository.save(review));
@@ -43,7 +43,7 @@ public class ReviewServiceImplementation implements ReviewService {
     @Override
     public ReviewDTO findById(Long reviewId) {
         Review foundReview = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ResourceNotFoundException("Review not found by id " + reviewId));
+                .orElseThrow(() -> new ResourceNotFoundException("The review by the provided id doesn't exist"));
 
         return reviewDTOMapper.apply(foundReview);
     }
@@ -53,7 +53,7 @@ public class ReviewServiceImplementation implements ReviewService {
         Page<Review> reviews = reviewRepository.findAll(PageRequest.of(page, size));
 
         if (reviews.isEmpty()) {
-           throw new ResourceNotFoundException("No reviews found");
+           throw new ResourceNotFoundException("No reviews exist");
         }
 
         return reviews.map(reviewDTOMapper);
@@ -64,7 +64,7 @@ public class ReviewServiceImplementation implements ReviewService {
         Page<Review> reviews = reviewRepository.findAllByUserUserId(userId, PageRequest.of(page, size));
 
         if (reviews.isEmpty()) {
-            throw new ResourceNotFoundException("No reviews found by user id " + userId);
+            throw new ResourceNotFoundException("No reviews exist by the provided user id");
         }
 
         return reviews.map(reviewDTOMapper);
@@ -75,7 +75,7 @@ public class ReviewServiceImplementation implements ReviewService {
         Page<Review> reviews = reviewRepository.findAllByPizzaPizzaId(pizzaId, PageRequest.of(page, size));
 
         if (reviews.isEmpty()) {
-            throw new ResourceNotFoundException("No reviews found by pizza id " + pizzaId);
+            throw new ResourceNotFoundException("No reviews exist by the provided pizza id");
         }
 
         return reviews.map(reviewDTOMapper);
@@ -84,7 +84,7 @@ public class ReviewServiceImplementation implements ReviewService {
     @Override
     public ReviewDTO updateById(Long reviewId, Review updatedReview, Authentication connectedUser) {
         Review foundReview = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ResourceNotFoundException("No review found by id " + reviewId));
+                .orElseThrow(() -> new ResourceNotFoundException("The review by the provided id doesn't exist"));
 
         securityService.validateAuthenticatedUser(connectedUser, foundReview.getUser().getUserId());
 
@@ -101,7 +101,7 @@ public class ReviewServiceImplementation implements ReviewService {
     @Override
     public void deleteById(Long reviewId, Authentication connectedUser) {
         Review foundReview = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ResourceNotFoundException("No review found by id " + reviewId));
+                .orElseThrow(() -> new ResourceNotFoundException("The review by the provided id doesn't exist"));
 
         securityService.validateAuthenticatedUser(connectedUser, foundReview.getUser().getUserId());
 
