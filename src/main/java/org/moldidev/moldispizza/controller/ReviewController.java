@@ -83,7 +83,7 @@ public class ReviewController {
         );
     }
 
-    @GetMapping("/user-id={userId}/pizza-id={pizzaId}")
+    @GetMapping("/exists/user-id={userId}/pizza-id={pizzaId}")
     public ResponseEntity<HTTPResponse> hasUserReviewedThePizza(@PathVariable("userId") Long userId, @PathVariable("pizzaId") Long pizzaId, Authentication connectedUser) {
         Boolean result = reviewService.hasUserReviewedThePizza(userId, pizzaId, connectedUser);
 

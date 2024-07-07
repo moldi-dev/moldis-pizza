@@ -1,10 +1,12 @@
 package org.moldidev.moldispizza.controller;
 
+import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.OrderDTO;
 import org.moldidev.moldispizza.entity.Order;
 import org.moldidev.moldispizza.response.HTTPResponse;
 import org.moldidev.moldispizza.service.OrderService;
+import org.moldidev.moldispizza.service.PaymentService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import java.util.Optional;
 public class OrderController {
 
     private final OrderService orderService;
+    private final PaymentService paymentService;
 
     @GetMapping
     public ResponseEntity<HTTPResponse> findAll(@RequestParam Optional<Integer> page, @RequestParam Optional<Integer> size) {
@@ -68,7 +71,7 @@ public class OrderController {
         );
     }
 
-    @GetMapping("/user-id={userId}/pizza-id={pizzaId}")
+    @GetMapping("/exists/user-id={userId}/pizza-id={pizzaId}")
     public ResponseEntity<HTTPResponse> hasUserBoughtThePizza(@PathVariable("userId") Long userId, @PathVariable("pizzaId") Long pizzaId, Authentication connectedUser) {
         Boolean result = orderService.hasUserBoughtThePizza(userId, pizzaId, connectedUser);
 
@@ -81,13 +84,15 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<HTTPResponse> save(@RequestBody Order order) {
+    public ResponseEntity<HTTPResponse> save(@RequestBody Order order) throws StripeException {
         OrderDTO result = orderService.save(order);
+        String paymentLink = paymentService.createPaymentLink(result);
 
         return ResponseEntity.created(URI.create("")).body(
                 HTTPResponse
                         .builder()
                         .message("Order created successfully")
+                        .developerMessage(paymentLink)
                         .data(Map.of("orderDTO", result))
                         .status(HttpStatus.CREATED)
                         .timestamp(LocalDateTime.now().toString())
@@ -97,12 +102,14 @@ public class OrderController {
     }
 
     @PostMapping("/user-id={user_id}")
-    public ResponseEntity<HTTPResponse> placeOrderByUserBasket(@PathVariable("user_id") Long userId, Authentication connectedUser) {
+    public ResponseEntity<HTTPResponse> placeOrderByUserBasket(@PathVariable("user_id") Long userId, Authentication connectedUser) throws StripeException {
         OrderDTO result = orderService.placeOrderByUserBasket(userId, connectedUser);
+        String paymentLink = paymentService.createPaymentLink(result);
 
         return ResponseEntity.created(URI.create("")).body(
                 HTTPResponse
                         .builder()
+                        .developerMessage(paymentLink)
                         .message("Order created successfully")
                         .data(Map.of("orderDTO", result))
                         .status(HttpStatus.CREATED)
@@ -112,7 +119,36 @@ public class OrderController {
         );
     }
 
-    @PatchMapping("id={id}")
+    @PostMapping("/pay-pending-order/id={orderId}")
+    public ResponseEntity<HTTPResponse> payPendingOrder(@PathVariable("orderId") Long orderId, Authentication connectedUser) throws StripeException {
+        OrderDTO result = orderService.findById(orderId, connectedUser);
+        String paymentLink = paymentService.createPaymentLink(result);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .developerMessage(paymentLink)
+                        .build()
+        );
+    }
+
+    @PatchMapping("/set-paid/id={id}")
+    public ResponseEntity<HTTPResponse> setOrderAsPaid(@PathVariable("id") Long orderId, Authentication connectedUser) {
+        OrderDTO result = orderService.setOrderAsPaid(orderId, connectedUser);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("The order has been paid successfully!")
+                        .data(Map.of("orderDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
+    }
+
+    @PatchMapping("/id={id}")
     public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long orderId, @RequestBody Order updatedOrder) {
         OrderDTO result = orderService.updateById(orderId, updatedOrder);
 

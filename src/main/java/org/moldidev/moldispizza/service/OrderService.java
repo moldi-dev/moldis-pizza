@@ -12,13 +12,16 @@ import org.springframework.transaction.annotation.Transactional;
 public interface OrderService {
     OrderDTO save(Order order);
 
+    OrderDTO findById(Long orderId, Authentication connectedUser);
     OrderDTO findById(Long orderId);
+
     Page<OrderDTO> findAll(int page, int size);
     Page<OrderDTO> findAllByUserId(Long userId, int page, int size, Authentication connectedUser);
 
     Boolean hasUserBoughtThePizza(Long userId, Long pizzaId, Authentication connectedUser);
 
     OrderDTO updateById(Long orderId, Order updatedOrder);
+    OrderDTO setOrderAsPaid(Long orderId, Authentication connectedUser);
 
     OrderDTO placeOrderByUserBasket(Long userId, Authentication connectedUser);
 

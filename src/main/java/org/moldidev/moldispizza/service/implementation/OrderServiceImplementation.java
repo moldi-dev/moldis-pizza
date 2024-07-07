@@ -43,6 +43,16 @@ public class OrderServiceImplementation implements OrderService {
     }
 
     @Override
+    public OrderDTO findById(Long orderId, Authentication connectedUser) {
+        Order foundOrder = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("The order by the provided id doesn't exist"));
+
+        securityService.validateAuthenticatedUser(connectedUser, foundOrder.getUser().getUserId());
+
+        return orderDTOMapper.apply(foundOrder);
+    }
+
+    @Override
     public OrderDTO findById(Long orderId) {
         Order foundOrder = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("The order by the provided id doesn't exist"));
@@ -95,6 +105,18 @@ public class OrderServiceImplementation implements OrderService {
         foundOrder.setStatus(updatedOrder.getStatus());
         foundOrder.setTotalPrice(updatedOrder.getTotalPrice());
         foundOrder.setUser(updatedOrder.getUser());
+
+        return orderDTOMapper.apply(orderRepository.save(foundOrder));
+    }
+
+    @Override
+    public OrderDTO setOrderAsPaid(Long orderId, Authentication connectedUser) {
+        Order foundOrder = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("The order by the provided id doesn't exist"));
+
+        securityService.validateAuthenticatedUser(connectedUser, foundOrder.getUser().getUserId());
+
+        foundOrder.setStatus(OrderStatus.PAID);
 
         return orderDTOMapper.apply(orderRepository.save(foundOrder));
     }

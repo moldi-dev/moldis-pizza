@@ -11,6 +11,7 @@ Welcome to Moldi's Pizza (backend only) application! This Spring Boot applicatio
 - Order Placement: Users can place orders.
 - Reviews: Users can place reviews on their ordered pizzas.
 - Pizza Management: Create, read, update and delete pizzas.
+- Payment system: The users can pay their orders through Stripe's payment gateway
 - Data Persistence: All the data is saved in a PostgreSQL database.
 - Data Auditing: Every action is logged with a username and a timestamp. 
 

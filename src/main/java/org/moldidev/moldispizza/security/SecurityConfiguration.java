@@ -49,7 +49,7 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.GET, "/api/v1/pizzas**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/pizzas/id=**").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews/user-id=**/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reviews/exists/user-id=**/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/api/v1/reviews/pizza-id=**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/reviews/user-id=**/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/reviews/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
@@ -59,9 +59,12 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/baskets/add-pizza/user-id=**/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/baskets/remove-pizza/user-id=**/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
 
-                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/bought/user-id=**/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/exists/user-id=**/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/user-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/orders/set-paid/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.POST, "/api/v1/orders/user-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/orders/pay-pending-order/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/images/user-id=**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/images/pizza-id=**").permitAll()
