@@ -1,6 +1,5 @@
 package org.moldidev.moldispizza.controller;
 
-import com.stripe.exception.StripeException;
 import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.OrderDTO;
 import org.moldidev.moldispizza.entity.Order;
@@ -17,6 +16,7 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -42,7 +42,7 @@ public class OrderController {
     }
 
     @GetMapping("/id={id}")
-    public ResponseEntity<HTTPResponse> findById(@PathVariable("id") Long orderId) {
+    public ResponseEntity<HTTPResponse> findById(@PathVariable("id") UUID orderId) {
         OrderDTO result = orderService.findById(orderId);
 
         return ResponseEntity.ok(
@@ -84,7 +84,7 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<HTTPResponse> save(@RequestBody Order order) throws StripeException {
+    public ResponseEntity<HTTPResponse> save(@RequestBody Order order) {
         OrderDTO result = orderService.save(order);
         String paymentLink = paymentService.createPaymentLink(result);
 
@@ -102,7 +102,7 @@ public class OrderController {
     }
 
     @PostMapping("/user-id={user_id}")
-    public ResponseEntity<HTTPResponse> placeOrderByUserBasket(@PathVariable("user_id") Long userId, Authentication connectedUser) throws StripeException {
+    public ResponseEntity<HTTPResponse> placeOrderByUserBasket(@PathVariable("user_id") Long userId, Authentication connectedUser) {
         OrderDTO result = orderService.placeOrderByUserBasket(userId, connectedUser);
         String paymentLink = paymentService.createPaymentLink(result);
 
@@ -120,7 +120,7 @@ public class OrderController {
     }
 
     @PostMapping("/pay-pending-order/id={orderId}")
-    public ResponseEntity<HTTPResponse> payPendingOrder(@PathVariable("orderId") Long orderId, Authentication connectedUser) throws StripeException {
+    public ResponseEntity<HTTPResponse> payPendingOrder(@PathVariable("orderId") UUID orderId, Authentication connectedUser) {
         OrderDTO result = orderService.findById(orderId, connectedUser);
         String paymentLink = paymentService.createPaymentLink(result);
 
@@ -133,7 +133,7 @@ public class OrderController {
     }
 
     @PatchMapping("/set-paid/id={id}")
-    public ResponseEntity<HTTPResponse> setOrderAsPaid(@PathVariable("id") Long orderId, Authentication connectedUser) {
+    public ResponseEntity<HTTPResponse> setOrderAsPaid(@PathVariable("id") UUID orderId, Authentication connectedUser) {
         OrderDTO result = orderService.setOrderAsPaid(orderId, connectedUser);
 
         return ResponseEntity.ok(
@@ -149,7 +149,7 @@ public class OrderController {
     }
 
     @PatchMapping("/id={id}")
-    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long orderId, @RequestBody Order updatedOrder) {
+    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") UUID orderId, @RequestBody Order updatedOrder) {
         OrderDTO result = orderService.updateById(orderId, updatedOrder);
 
         return ResponseEntity.ok(
@@ -165,7 +165,7 @@ public class OrderController {
     }
 
     @DeleteMapping("/id={id}")
-    public ResponseEntity<HTTPResponse> deleteById(@PathVariable("id") Long orderId) {
+    public ResponseEntity<HTTPResponse> deleteById(@PathVariable("id") UUID orderId) {
         orderService.deleteById(orderId);
 
         return ResponseEntity.ok(

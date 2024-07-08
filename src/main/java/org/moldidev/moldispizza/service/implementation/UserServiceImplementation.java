@@ -5,7 +5,6 @@ import org.moldidev.moldispizza.dto.UserDTO;
 import org.moldidev.moldispizza.entity.*;
 import org.moldidev.moldispizza.enumeration.Role;
 import org.moldidev.moldispizza.exception.ObjectNotValidException;
-import org.moldidev.moldispizza.exception.OperationNotPermittedException;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.UserDTOMapper;

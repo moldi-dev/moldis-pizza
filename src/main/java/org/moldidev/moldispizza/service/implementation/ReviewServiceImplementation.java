@@ -1,7 +1,6 @@
 package org.moldidev.moldispizza.service.implementation;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.BadRequestException;
 import org.moldidev.moldispizza.dto.ReviewDTO;
 import org.moldidev.moldispizza.entity.Pizza;
 import org.moldidev.moldispizza.entity.Review;

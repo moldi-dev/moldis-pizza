@@ -8,6 +8,7 @@ import lombok.Data;
 import org.moldidev.moldispizza.enumeration.OrderStatus;
 
 import java.util.List;
+import java.util.UUID;
 
 @Table(name = "orders")
 @Entity
@@ -16,8 +17,8 @@ public class Order extends Auditable {
 
     @Column(name = "order_id", updatable = false)
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long orderId;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID orderId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userId", referencedColumnName = "user_id", nullable = false)

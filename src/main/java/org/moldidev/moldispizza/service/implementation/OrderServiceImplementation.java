@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -43,7 +44,7 @@ public class OrderServiceImplementation implements OrderService {
     }
 
     @Override
-    public OrderDTO findById(Long orderId, Authentication connectedUser) {
+    public OrderDTO findById(UUID orderId, Authentication connectedUser) {
         Order foundOrder = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("The order by the provided id doesn't exist"));
 
@@ -53,7 +54,7 @@ public class OrderServiceImplementation implements OrderService {
     }
 
     @Override
-    public OrderDTO findById(Long orderId) {
+    public OrderDTO findById(UUID orderId) {
         Order foundOrder = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("The order by the provided id doesn't exist"));
 
@@ -95,7 +96,7 @@ public class OrderServiceImplementation implements OrderService {
     }
 
     @Override
-    public OrderDTO updateById(Long orderId, Order updatedOrder) {
+    public OrderDTO updateById(UUID orderId, Order updatedOrder) {
         Order foundOrder = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("The order by the provided id doesn't exist"));
 
@@ -110,7 +111,7 @@ public class OrderServiceImplementation implements OrderService {
     }
 
     @Override
-    public OrderDTO setOrderAsPaid(Long orderId, Authentication connectedUser) {
+    public OrderDTO setOrderAsPaid(UUID orderId, Authentication connectedUser) {
         Order foundOrder = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("The order by the provided id doesn't exist"));
 
@@ -150,7 +151,7 @@ public class OrderServiceImplementation implements OrderService {
     }
 
     @Override
-    public void deleteById(Long orderId) {
+    public void deleteById(UUID orderId) {
         Order foundOrder = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("The order by the provided id doesn't exist"));
 
