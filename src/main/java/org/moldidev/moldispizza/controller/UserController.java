@@ -4,10 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.UserDTO;
 import org.moldidev.moldispizza.request.admin.UserCreateAdminRequest;
 import org.moldidev.moldispizza.request.admin.UserDetailsUpdateAdminRequest;
-import org.moldidev.moldispizza.request.customer.UserChangePasswordRequest;
-import org.moldidev.moldispizza.request.customer.UserDetailsUpdateRequest;
-import org.moldidev.moldispizza.request.customer.UserResetPasswordCodeRequest;
-import org.moldidev.moldispizza.request.customer.UserResetPasswordEmailRequest;
+import org.moldidev.moldispizza.request.customer.*;
 import org.moldidev.moldispizza.response.HTTPResponse;
 import org.moldidev.moldispizza.service.UserService;
 import org.springframework.data.domain.Page;
@@ -118,9 +115,20 @@ public class UserController {
         );
     }
 
-    @GetMapping("/verify")
-    public ResponseEntity<String> verifyByVerificationToken(@RequestParam("email") String email, @RequestParam("token") String token) {
-        return userService.verifyByVerificationToken(email, token);
+    @PatchMapping("/verify")
+    public ResponseEntity<HTTPResponse> verifyByVerificationToken(@RequestBody UserActivateAccountRequest request) {
+        UserDTO result = userService.verifyByVerificationToken(request);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("Your account has been successfully activated. You may now sign in")
+                        .data(Map.of("userDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
     @GetMapping("/admin/id={userId}")

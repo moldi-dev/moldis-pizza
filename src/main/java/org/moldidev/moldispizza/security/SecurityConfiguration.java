@@ -36,7 +36,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/api/v1/authentication/**").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/verify**").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/users/verify").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/username=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/users/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/users/remove-image/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")

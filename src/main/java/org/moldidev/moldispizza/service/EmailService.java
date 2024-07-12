@@ -18,12 +18,10 @@ public class EmailService {
     public void sendCompleteRegistrationEmail(String to, String verificationToken) {
         SimpleMailMessage email = new SimpleMailMessage();
 
-        String link = "http://localhost:8080/api/v1/users/verify?email=" + to + "&token=" + verificationToken;
-
         email.setTo(to);
         email.setFrom("MS_LANYBX@trial-v69oxl5dj9k4785k.mlsender.net");
         email.setSubject("Complete your registration for Moldi's Pizza");
-        email.setText("If this was not you, please ignore this email. Otherwise, confirm your account by clicking here: " + link);
+        email.setText("If this was not you, please ignore this email. Otherwise, use this code to verify your account: " + verificationToken);
 
         javaMailSender.send(email);
     }

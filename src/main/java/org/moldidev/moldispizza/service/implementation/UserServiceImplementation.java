@@ -54,6 +54,7 @@ public class UserServiceImplementation implements UserService {
     private final ObjectValidator<UserDetailsUpdateRequest> userDetailsUpdateRequestValidator;
     private final ObjectValidator<UserCreateAdminRequest> userCreateAdminRequestValidator;
     private final ObjectValidator<UserDetailsUpdateAdminRequest> userDetailsUpdateAdminRequestValidator;
+    private final ObjectValidator<UserActivateAccountRequest> userActivateAccountRequestValidator;
 
     @Override
     public UserDTO save(UserCreateAdminRequest request) {
@@ -234,22 +235,23 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public ResponseEntity<String> verifyByVerificationToken(String email, String verificationToken) {
-        User foundUser = userRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided email doesn't exist"));
+    public UserDTO verifyByVerificationToken(UserActivateAccountRequest request) {
+        userActivateAccountRequestValidator.validate(request);
+
+        User foundUser = userRepository.findByVerificationToken(request.verificationCode())
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided verification code doesn't exist"));
 
         if (foundUser.getIsEnabled()) {
-            return new ResponseEntity<>("Your account is already verified", HttpStatus.CONFLICT);
+            throw new ResourceAlreadyExistsException("The user already verified");
         }
 
-        if (foundUser.getVerificationToken().equals(verificationToken)) {
+        if (foundUser.getVerificationToken().equals(request.verificationCode())) {
             foundUser.setIsEnabled(true);
-            userRepository.save(foundUser);
-            return new ResponseEntity<>("Your account has been successfully verified. You may now sign in", HttpStatus.OK);
+            return userDTOMapper.apply(userRepository.save(foundUser));
         }
 
         else {
-            return new ResponseEntity<>("The verification token is invalid", HttpStatus.BAD_REQUEST);
+            throw new ResourceNotFoundException("The verification code is invalid");
         }
     }
 
