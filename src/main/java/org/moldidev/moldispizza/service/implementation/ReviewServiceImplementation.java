@@ -6,7 +6,6 @@ import org.moldidev.moldispizza.entity.Pizza;
 import org.moldidev.moldispizza.entity.Review;
 import org.moldidev.moldispizza.entity.User;
 import org.moldidev.moldispizza.enumeration.OrderStatus;
-import org.moldidev.moldispizza.exception.ObjectNotValidException;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.ReviewDTOMapper;
@@ -24,8 +23,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashSet;
 
 @Service
 @Transactional

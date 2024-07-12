@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f6f6f6;
+            color: #333333;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .header h1 {
+            margin: 0;
+            color: #e74c3c;
+        }
+        .order-details {
+            margin: 20px 0;
+        }
+        .order-details h2 {
+            color: #e74c3c;
+        }
+        .order-details p {
+            margin: 5px 0;
+        }
+        .order-item {
+            border-bottom: 1px solid #eeeeee;
+            padding: 10px 0;
+        }
+        .order-item:last-child {
+            border-bottom: none;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px 0;
+            font-size: 12px;
+            color: #aaaaaa;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Thank you for your order [[${lastName}]] [[${firstName}]] !</h1>
+    </div>
+    <div class="order-details">
+        <h2>Order Details</h2>
+        <p><strong>Date:</strong> [[${createdDate}]]</p>
+        <p><strong>Total:</strong> $[[${totalPrice}]]</p>
+        <h3>Pizzas:</h3>
+        <div th:each="pizza : ${pizzas}" class="order-item">
+            <p><strong>[[${pizza.name}]]</strong></p>
+            <p>[[${pizza.ingredients}]]</p>
+            <p>$[[${pizza.price}]]</p>
+        </div>
+    </div>
+    <div class="footer">
+        <p>&copy; 2024 Moldi's Pizza. All rights reserved.</p>
+    </div>
+</div>
+</body>
+</html>

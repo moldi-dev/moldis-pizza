@@ -13,6 +13,7 @@ import org.moldidev.moldispizza.repository.BasketRepository;
 import org.moldidev.moldispizza.repository.OrderRepository;
 import org.moldidev.moldispizza.repository.UserRepository;
 import org.moldidev.moldispizza.request.admin.OrderUpdateAdminRequest;
+import org.moldidev.moldispizza.service.EmailService;
 import org.moldidev.moldispizza.service.OrderService;
 import org.moldidev.moldispizza.service.SecurityService;
 import org.moldidev.moldispizza.validation.ObjectValidator;
@@ -36,6 +37,7 @@ public class OrderServiceImplementation implements OrderService {
     private final BasketRepository basketRepository;
     private final SecurityService securityService;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     private final ObjectValidator<OrderUpdateAdminRequest> orderUpdateAdminRequestValidator;
 
@@ -121,7 +123,11 @@ public class OrderServiceImplementation implements OrderService {
 
         foundOrder.setStatus(OrderStatus.PAID);
 
-        return orderDTOMapper.apply(orderRepository.save(foundOrder));
+        OrderDTO paidOrder = orderDTOMapper.apply(orderRepository.save(foundOrder));
+
+        emailService.sendOrderPaidEmail(foundOrder.getUser().getEmail(), paidOrder);
+
+        return paidOrder;
     }
 
     @Override

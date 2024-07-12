@@ -2,7 +2,6 @@ package org.moldidev.moldispizza.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.OrderDTO;
-import org.moldidev.moldispizza.entity.Order;
 import org.moldidev.moldispizza.request.admin.OrderUpdateAdminRequest;
 import org.moldidev.moldispizza.response.HTTPResponse;
 import org.moldidev.moldispizza.service.OrderService;

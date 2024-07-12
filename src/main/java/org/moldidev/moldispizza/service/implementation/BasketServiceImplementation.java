@@ -12,7 +12,6 @@ import org.moldidev.moldispizza.repository.PizzaRepository;
 import org.moldidev.moldispizza.repository.UserRepository;
 import org.moldidev.moldispizza.service.BasketService;
 import org.moldidev.moldispizza.service.SecurityService;
-import org.moldidev.moldispizza.validation.ObjectValidator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;

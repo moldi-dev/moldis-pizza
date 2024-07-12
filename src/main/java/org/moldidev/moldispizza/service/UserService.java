@@ -6,7 +6,6 @@ import org.moldidev.moldispizza.request.admin.UserCreateAdminRequest;
 import org.moldidev.moldispizza.request.admin.UserDetailsUpdateAdminRequest;
 import org.moldidev.moldispizza.request.customer.*;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -2,7 +2,6 @@ package org.moldidev.moldispizza.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.UserDTO;
-import org.moldidev.moldispizza.entity.User;
 import org.moldidev.moldispizza.request.customer.UserSignInRequest;
 import org.moldidev.moldispizza.request.customer.UserSignUpRequest;
 import org.moldidev.moldispizza.response.HTTPResponse;

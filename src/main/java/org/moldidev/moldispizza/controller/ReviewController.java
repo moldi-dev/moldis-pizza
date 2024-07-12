@@ -2,7 +2,6 @@ package org.moldidev.moldispizza.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.ReviewDTO;
-import org.moldidev.moldispizza.entity.Review;
 import org.moldidev.moldispizza.request.admin.ReviewUpdateAdminRequest;
 import org.moldidev.moldispizza.request.customer.UserCreateReviewRequest;
 import org.moldidev.moldispizza.response.HTTPResponse;
