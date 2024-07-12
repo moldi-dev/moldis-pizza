@@ -3,6 +3,8 @@ package org.moldidev.moldispizza.controller;
 import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.UserDTO;
 import org.moldidev.moldispizza.entity.User;
+import org.moldidev.moldispizza.request.customer.UserSignInRequest;
+import org.moldidev.moldispizza.request.customer.UserSignUpRequest;
 import org.moldidev.moldispizza.response.HTTPResponse;
 import org.moldidev.moldispizza.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -24,8 +26,8 @@ public class AuthenticationController {
     private final UserService userService;
 
     @PostMapping("/sign-up")
-    public ResponseEntity<HTTPResponse> signUp(@RequestBody User user) {
-        UserDTO createdUser = userService.save(user);
+    public ResponseEntity<HTTPResponse> signUp(@RequestBody UserSignUpRequest request) {
+        UserDTO createdUser = userService.save(request);
 
         return ResponseEntity.created(URI.create("")).body(
                 HTTPResponse
@@ -40,14 +42,14 @@ public class AuthenticationController {
     }
 
     @PostMapping("/sign-in")
-    public ResponseEntity<HTTPResponse> signIn(@RequestBody Map<String, Object> credentials) {
-        Map<String, String> tokens = userService.signIn(credentials);
+    public ResponseEntity<HTTPResponse> signIn(@RequestBody UserSignInRequest request) {
+        Map<String, String> tokens = userService.signIn(request);
 
         return ResponseEntity.ok(
                 HTTPResponse
                         .builder()
                         .timestamp(LocalDateTime.now().toString())
-                        .message("Sign in successful. Welcome " + credentials.get("username"))
+                        .message("Sign in successful. Welcome " + request.username())
                         .status(HttpStatus.OK)
                         .statusCode(HttpStatus.OK.value())
                         .data(tokens)

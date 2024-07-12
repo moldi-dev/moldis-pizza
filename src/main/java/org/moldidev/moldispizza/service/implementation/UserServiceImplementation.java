@@ -9,6 +9,9 @@ import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
 import org.moldidev.moldispizza.mapper.UserDTOMapper;
 import org.moldidev.moldispizza.repository.*;
+import org.moldidev.moldispizza.request.admin.UserCreateAdminRequest;
+import org.moldidev.moldispizza.request.admin.UserDetailsUpdateAdminRequest;
+import org.moldidev.moldispizza.request.customer.*;
 import org.moldidev.moldispizza.service.*;
 import org.moldidev.moldispizza.validation.ObjectValidator;
 import org.springframework.data.domain.Page;
@@ -16,7 +19,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -41,39 +43,97 @@ public class UserServiceImplementation implements UserService {
     private final OrderRepository orderRepository;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
-    private final ObjectValidator<User> objectValidator;
     private final SecurityService securityService;
     private final JWTService jwtService;
 
-    @Override
-    public UserDTO save(User user) {
-        objectValidator.validate(user);
-        HashSet<String> validationErrors = new HashSet<>();
+    private final ObjectValidator<UserSignInRequest> userSignInRequestValidator;
+    private final ObjectValidator<UserSignUpRequest> userSignUpRequestValidator;
+    private final ObjectValidator<UserResetPasswordEmailRequest> userResetPasswordEmailRequestValidator;
+    private final ObjectValidator<UserResetPasswordCodeRequest> userResetPasswordCodeRequestValidator;
+    private final ObjectValidator<UserChangePasswordRequest> userChangePasswordRequestValidator;
+    private final ObjectValidator<UserDetailsUpdateRequest> userDetailsUpdateRequestValidator;
+    private final ObjectValidator<UserCreateAdminRequest> userCreateAdminRequestValidator;
+    private final ObjectValidator<UserDetailsUpdateAdminRequest> userDetailsUpdateAdminRequestValidator;
 
-        Optional<User> foundUser = userRepository.findByUsernameIgnoreCase(user.getUsername());
+    @Override
+    public UserDTO save(UserCreateAdminRequest request) {
+        userCreateAdminRequestValidator.validate(request);
+
+        Optional<User> foundUser = userRepository.findByUsernameIgnoreCase(request.username());
 
         if (foundUser.isPresent()) {
             throw new ResourceAlreadyExistsException("This username is already taken");
         }
 
-        Optional<User> foundUserByEmail = userRepository.findByEmailIgnoreCase(user.getEmail());
+        Optional<User> foundUserByEmail = userRepository.findByEmailIgnoreCase(request.email());
 
         if (foundUserByEmail.isPresent()) {
             throw new ResourceAlreadyExistsException("This email address is already taken");
         }
 
-        if (user.getPassword().length() < 8) {
-            validationErrors.add("The password must be at least 8 characters long");
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
+        User user = new User();
+
+        user.setUsername(request.username());
+        user.setPassword(encoder.encode(request.password()));
+        user.setEmail(request.email());
+        user.setFirstName(request.firstName());
+        user.setLastName(request.lastName());
+        user.setAddress(request.address());
+        user.setIsEnabled(true);
+        user.setIsLocked(false);
+        user.setRole(Role.CUSTOMER);
+
+        User savedUser = userRepository.save(user);
+
+        Basket basket = new Basket();
+        basket.setUser(savedUser);
+        basket.setTotalPrice(0.0);
+        basket.setPizzas(new ArrayList<>());
+
+        basketRepository.save(basket);
+
+        return userDTOMapper.apply(savedUser);
+    }
+
+    @Override
+    public UserDTO save(UserSignUpRequest request) {
+        userSignUpRequestValidator.validate(request);
+        HashSet<String> validationErrors = new HashSet<>();
+
+        Optional<User> foundUser = userRepository.findByUsernameIgnoreCase(request.username());
+
+        if (foundUser.isPresent()) {
+            throw new ResourceAlreadyExistsException("This username is already taken");
+        }
+
+        Optional<User> foundUserByEmail = userRepository.findByEmailIgnoreCase(request.email());
+
+        if (foundUserByEmail.isPresent()) {
+            throw new ResourceAlreadyExistsException("This email address is already taken");
+        }
+
+        if (!request.password().matches(request.confirmPassword())) {
+            validationErrors.add("The passwords do not match");
             throw new ObjectNotValidException(validationErrors);
         }
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        String verificationToken = generateVerificationToken(user);
 
-        user.setPassword(encoder.encode(user.getPassword()));
+        User user = new User();
+        user.setUsername(request.username());
+        user.setFirstName(request.firstName());
+        user.setLastName(request.lastName());
+        user.setEmail(request.email());
+        user.setAddress(request.address());
+        user.setPassword(encoder.encode(request.password()));
         user.setRole(Role.CUSTOMER);
         user.setIsLocked(false);
         user.setIsEnabled(false);
+
+        String verificationToken = generateVerificationToken(user);
+
         user.setVerificationToken(verificationToken);
 
         User savedUser = userRepository.save(user);
@@ -91,12 +151,12 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public Map<String, String> signIn(Map<String, Object> credentials) {
-        String username = (String) credentials.get("username");
-        String password = (String) credentials.get("password");
-        boolean rememberMe = Boolean.parseBoolean((String) credentials.get("rememberMe"));
+    public Map<String, String> signIn(UserSignInRequest request) {
+        userSignInRequestValidator.validate(request);
 
-        User authenticatedUser = authenticate(username, password);
+        boolean rememberMe = Boolean.parseBoolean(request.rememberMe());
+
+        User authenticatedUser = authenticate(request.username(), request.password());
 
         String accessToken = jwtService.generateToken(authenticatedUser, 1000L * 60 * 60); // 60 minutes = one hour
         String refreshToken = jwtService.generateToken(authenticatedUser, 1000L * 60 * 60 * 24); // 24 hours = one day
@@ -206,8 +266,10 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public void sendResetPasswordEmail(String email) {
-        User foundUser = userRepository.findByEmailIgnoreCase(email)
+    public void sendResetPasswordEmail(UserResetPasswordEmailRequest request) {
+        userResetPasswordEmailRequestValidator.validate(request);
+
+        User foundUser = userRepository.findByEmailIgnoreCase(request.email())
                 .orElseThrow(() -> new ResourceNotFoundException("The user by the provided email doesn't exist"));
 
         foundUser.setResetPasswordToken(generateResetPasswordToken(foundUser));
@@ -217,31 +279,50 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public UserDTO resetPasswordThroughToken(String token, String newPassword) {
-        User foundUser = userRepository.findByResetPasswordToken(token)
+    public UserDTO resetPasswordThroughToken(UserResetPasswordCodeRequest request) {
+        userResetPasswordCodeRequestValidator.validate(request);
+
+        HashSet<String> violationErrros = new HashSet<>();
+
+        if (!request.newPassword().matches(request.confirmNewPassword())) {
+            violationErrros.add("The passwords do not match");
+            throw new ObjectNotValidException(violationErrros);
+        }
+
+        User foundUser = userRepository.findByResetPasswordToken(request.resetPasswordCode())
                 .orElseThrow(() -> new ResourceNotFoundException("The user by the provided token doesn't exist"));
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-        foundUser.setPassword(encoder.encode(newPassword));
+        foundUser.setPassword(encoder.encode(request.newPassword()));
 
         return userDTOMapper.apply(userRepository.save(foundUser));
     }
 
     @Override
-    public UserDTO changePasswordById(Long userId, String currentPassword, String newPassword, Authentication connectedUser) {
+    public UserDTO changePasswordById(Long userId, UserChangePasswordRequest request, Authentication connectedUser) {
         securityService.validateAuthenticatedUser(connectedUser, userId);
+
+        HashSet<String> violationErrors = new HashSet<>();
+
+        userChangePasswordRequestValidator.validate(request);
 
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
-        if (!encoder.matches(currentPassword, foundUser.getPassword())) {
-            throw new BadCredentialsException("Invalid current password provided");
+        if (!encoder.matches(request.currentPassword(), foundUser.getPassword())) {
+            violationErrors.add("Invalid current password provided");
+            throw new ObjectNotValidException(violationErrors);
         }
 
-        foundUser.setPassword(encoder.encode(newPassword));
+        if (!request.newPassword().equals(request.confirmNewPassword())) {
+            violationErrors.add("The new passwords do not match");
+            throw new ObjectNotValidException(violationErrors);
+        }
+
+        foundUser.setPassword(encoder.encode(request.newPassword()));
         return userDTOMapper.apply(userRepository.save(foundUser));
     }
 
@@ -270,8 +351,8 @@ public class UserServiceImplementation implements UserService {
         Image userImage = foundUser.getImage();
 
         if (userImage != null) {
-            foundUser.setImage(null);
             imageService.delete(userImage);
+            foundUser.setImage(null);
             return userDTOMapper.apply(userRepository.save(foundUser));
         }
 
@@ -279,7 +360,7 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public UserDTO updateById(Long userId, User updatedUser, Authentication connectedUser) {
+    public UserDTO updateById(Long userId, UserDetailsUpdateRequest request, Authentication connectedUser) {
         HashSet<String> validationErrors = new HashSet<>();
 
         securityService.validateAuthenticatedUser(connectedUser, userId);
@@ -287,24 +368,36 @@ public class UserServiceImplementation implements UserService {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
 
-        objectValidator.validate(updatedUser);
+        userDetailsUpdateRequestValidator.validate(request);
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        String givenPassword = updatedUser.getPassword();
-        String foundPassword = foundUser.getPassword();
 
-        if (!encoder.matches(givenPassword, foundPassword)) {
+        if (!encoder.matches(request.password(), foundUser.getPassword())) {
             validationErrors.add("Invalid password provided");
             throw new ObjectNotValidException(validationErrors);
         }
 
-        if (updatedUser.getImage() != null) {
-            foundUser.setImage(updatedUser.getImage());
-        }
+        foundUser.setUsername(request.username());
+        foundUser.setEmail(request.email());
+        foundUser.setFirstName(request.firstName());
+        foundUser.setLastName(request.lastName());
+        foundUser.setAddress(request.address());
 
-        foundUser.setFirstName(updatedUser.getFirstName());
-        foundUser.setLastName(updatedUser.getLastName());
-        foundUser.setAddress(updatedUser.getAddress());
+        return userDTOMapper.apply(userRepository.save(foundUser));
+    }
+
+    @Override
+    public UserDTO updateById(Long userId, UserDetailsUpdateAdminRequest request) {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
+
+        userDetailsUpdateAdminRequestValidator.validate(request);
+
+        foundUser.setUsername(request.username());
+        foundUser.setEmail(request.email());
+        foundUser.setFirstName(request.firstName());
+        foundUser.setLastName(request.lastName());
+        foundUser.setAddress(request.address());
 
         return userDTOMapper.apply(userRepository.save(foundUser));
     }
@@ -331,6 +424,14 @@ public class UserServiceImplementation implements UserService {
         }
 
         userRepository.delete(foundUser);
+    }
+
+    @Override
+    public Boolean checkIfUserIsAdmin(Long userId) {
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
+
+        return foundUser.getRole().equals(Role.ADMINISTRATOR);
     }
 
     private String generateVerificationToken(User user) {

@@ -12,6 +12,7 @@ import org.moldidev.moldispizza.mapper.OrderDTOMapper;
 import org.moldidev.moldispizza.repository.BasketRepository;
 import org.moldidev.moldispizza.repository.OrderRepository;
 import org.moldidev.moldispizza.repository.UserRepository;
+import org.moldidev.moldispizza.request.admin.OrderUpdateAdminRequest;
 import org.moldidev.moldispizza.service.OrderService;
 import org.moldidev.moldispizza.service.SecurityService;
 import org.moldidev.moldispizza.validation.ObjectValidator;
@@ -32,23 +33,22 @@ public class OrderServiceImplementation implements OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderDTOMapper orderDTOMapper;
-    private final ObjectValidator<Order> objectValidator;
     private final BasketRepository basketRepository;
     private final SecurityService securityService;
     private final UserRepository userRepository;
 
-    @Override
-    public OrderDTO save(Order order) {
-        objectValidator.validate(order);
-        return orderDTOMapper.apply(orderRepository.save(order));
-    }
+    private final ObjectValidator<OrderUpdateAdminRequest> orderUpdateAdminRequestValidator;
 
     @Override
-    public OrderDTO findById(UUID orderId, Authentication connectedUser) {
+    public OrderDTO findPendingOrderById(UUID orderId, Authentication connectedUser) {
         Order foundOrder = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("The order by the provided id doesn't exist"));
 
         securityService.validateAuthenticatedUser(connectedUser, foundOrder.getUser().getUserId());
+
+        if (!foundOrder.getStatus().equals(OrderStatus.PENDING)) {
+            throw new ResourceNotFoundException("The order by the provided id doesn't exist");
+        }
 
         return orderDTOMapper.apply(foundOrder);
     }
@@ -92,30 +92,32 @@ public class OrderServiceImplementation implements OrderService {
     public Boolean hasUserBoughtThePizza(Long userId, Long pizzaId, Authentication connectedUser) {
         securityService.validateAuthenticatedUser(connectedUser, userId);
 
-        return orderRepository.existsByUserUserIdAndPizzasPizzaId(userId, pizzaId);
+        return orderRepository.existsByUserUserIdAndPizzasPizzaIdAndStatus(userId, pizzaId, OrderStatus.DELIVERED);
     }
 
     @Override
-    public OrderDTO updateById(UUID orderId, Order updatedOrder) {
+    public OrderDTO updateById(UUID orderId, OrderUpdateAdminRequest request) {
         Order foundOrder = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("The order by the provided id doesn't exist"));
 
-        objectValidator.validate(updatedOrder);
+        orderUpdateAdminRequestValidator.validate(request);
 
-        foundOrder.setPizzas(updatedOrder.getPizzas());
-        foundOrder.setStatus(updatedOrder.getStatus());
-        foundOrder.setTotalPrice(updatedOrder.getTotalPrice());
-        foundOrder.setUser(updatedOrder.getUser());
+        foundOrder.setStatus(request.status());
+        foundOrder.setTotalPrice(request.totalPrice());
 
         return orderDTOMapper.apply(orderRepository.save(foundOrder));
     }
 
     @Override
-    public OrderDTO setOrderAsPaid(UUID orderId, Authentication connectedUser) {
+    public OrderDTO setOrderAsPaidIfNotPaid(UUID orderId, Authentication connectedUser) {
         Order foundOrder = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("The order by the provided id doesn't exist"));
 
         securityService.validateAuthenticatedUser(connectedUser, foundOrder.getUser().getUserId());
+
+        if (!foundOrder.getStatus().equals(OrderStatus.PENDING)) {
+            throw new ResourceNotFoundException("The order by the provided id doesn't exist");
+        }
 
         foundOrder.setStatus(OrderStatus.PAID);
 
@@ -156,5 +158,10 @@ public class OrderServiceImplementation implements OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("The order by the provided id doesn't exist"));
 
         orderRepository.delete(foundOrder);
+    }
+
+    @Override
+    public void delete(Order order) {
+        orderRepository.delete(order);
     }
 }

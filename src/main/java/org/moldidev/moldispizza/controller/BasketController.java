@@ -68,38 +68,6 @@ public class BasketController {
         );
     }
 
-    @PostMapping
-    public ResponseEntity<HTTPResponse> save(@RequestBody Basket basket) {
-        BasketDTO result = basketService.save(basket);
-
-        return ResponseEntity.created(URI.create("")).body(
-                HTTPResponse
-                        .builder()
-                        .message("Basket created successfully")
-                        .data(Map.of("basketDTO", result))
-                        .status(HttpStatus.CREATED)
-                        .timestamp(LocalDateTime.now().toString())
-                        .statusCode(HttpStatus.CREATED.value())
-                        .build()
-        );
-    }
-
-    @PatchMapping("/id={id}")
-    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long basketId, @RequestBody Basket updatedBasket) {
-        BasketDTO result = basketService.updateById(basketId, updatedBasket);
-
-        return ResponseEntity.ok(
-                HTTPResponse
-                        .builder()
-                        .message("Basket updated successfully")
-                        .data(Map.of("basketDTO", result))
-                        .status(HttpStatus.OK)
-                        .timestamp(LocalDateTime.now().toString())
-                        .statusCode(HttpStatus.OK.value())
-                        .build()
-        );
-    }
-
     @PatchMapping("/add-pizza/user-id={user_id}/pizza-id={pizza_id}")
     public ResponseEntity<HTTPResponse> addPizzaToUserBasket(@PathVariable("user_id") Long userId, @PathVariable("pizza_id") Long pizzaId, Authentication connectedUser) {
         BasketDTO result = basketService.addPizzaToUserBasket(userId, pizzaId, connectedUser);
@@ -125,21 +93,6 @@ public class BasketController {
                         .builder()
                         .message("Pizza removed successfully from the user's basket")
                         .data(Map.of("basketDTO", result))
-                        .status(HttpStatus.OK)
-                        .timestamp(LocalDateTime.now().toString())
-                        .statusCode(HttpStatus.OK.value())
-                        .build()
-        );
-    }
-
-    @DeleteMapping("/id={id}")
-    public ResponseEntity<HTTPResponse> deleteById(@PathVariable("id") Long basketId) {
-        basketService.deleteById(basketId);
-
-        return ResponseEntity.ok(
-                HTTPResponse
-                        .builder()
-                        .message("Basket deleted successfully")
                         .status(HttpStatus.OK)
                         .timestamp(LocalDateTime.now().toString())
                         .statusCode(HttpStatus.OK.value())

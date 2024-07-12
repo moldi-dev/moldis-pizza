@@ -2,11 +2,13 @@ package org.moldidev.moldispizza.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.PizzaDTO;
-import org.moldidev.moldispizza.entity.Pizza;
+import org.moldidev.moldispizza.request.admin.PizzaCreateAdminRequest;
+import org.moldidev.moldispizza.request.admin.PizzaUpdateDetailsAdminRequest;
 import org.moldidev.moldispizza.response.HTTPResponse;
 import org.moldidev.moldispizza.service.PizzaService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -67,9 +69,9 @@ public class PizzaController {
         );
     }
 
-    @PostMapping
-    public ResponseEntity<HTTPResponse> save(@RequestBody Pizza pizza) {
-        PizzaDTO result = pizzaService.save(pizza);
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<HTTPResponse> save(@ModelAttribute PizzaCreateAdminRequest request) {
+        PizzaDTO result = pizzaService.save(request);
 
         return ResponseEntity.created(URI.create("")).body(
                 HTTPResponse
@@ -83,46 +85,14 @@ public class PizzaController {
         );
     }
 
-    @PatchMapping("/id={id}")
-    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long pizzaId, @RequestBody Pizza updatedPizza) {
-        PizzaDTO result = pizzaService.updateById(pizzaId, updatedPizza);
+    @PatchMapping(path = "/admin/id={id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long pizzaId, @ModelAttribute PizzaUpdateDetailsAdminRequest request) {
+        PizzaDTO result = pizzaService.updateById(pizzaId, request);
 
         return ResponseEntity.ok(
                 HTTPResponse
                         .builder()
                         .message("Pizza updated successfully")
-                        .data(Map.of("pizzaDTO", result))
-                        .status(HttpStatus.OK)
-                        .timestamp(LocalDateTime.now().toString())
-                        .statusCode(HttpStatus.OK.value())
-                        .build()
-        );
-    }
-
-    @PatchMapping("/add-image/id={pizza_id}/image-id={image_id}")
-    public ResponseEntity<HTTPResponse> addImageToPizza(@PathVariable("pizza_id") Long pizzaId, @PathVariable("image_id") Long imageId) {
-        PizzaDTO result = pizzaService.addImage(pizzaId, imageId);
-
-        return ResponseEntity.ok(
-                HTTPResponse
-                        .builder()
-                        .message("Pizza image added successfully")
-                        .data(Map.of("pizzaDTO", result))
-                        .status(HttpStatus.OK)
-                        .timestamp(LocalDateTime.now().toString())
-                        .statusCode(HttpStatus.OK.value())
-                        .build()
-        );
-    }
-
-    @PatchMapping("/remove-image/id={pizza_id}/image-id={image_id}")
-    public ResponseEntity<HTTPResponse> removeImageFromPizza(@PathVariable("pizza_id") Long pizzaId, @PathVariable("image_id") Long imageId) {
-        PizzaDTO result = pizzaService.removeImage(pizzaId, imageId);
-
-        return ResponseEntity.ok(
-                HTTPResponse
-                        .builder()
-                        .message("Pizza image removed successfully")
                         .data(Map.of("pizzaDTO", result))
                         .status(HttpStatus.OK)
                         .timestamp(LocalDateTime.now().toString())

@@ -3,6 +3,7 @@ package org.moldidev.moldispizza.controller;
 import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.OrderDTO;
 import org.moldidev.moldispizza.entity.Order;
+import org.moldidev.moldispizza.request.admin.OrderUpdateAdminRequest;
 import org.moldidev.moldispizza.response.HTTPResponse;
 import org.moldidev.moldispizza.service.OrderService;
 import org.moldidev.moldispizza.service.PaymentService;
@@ -83,24 +84,6 @@ public class OrderController {
         );
     }
 
-    @PostMapping
-    public ResponseEntity<HTTPResponse> save(@RequestBody Order order) {
-        OrderDTO result = orderService.save(order);
-        String paymentLink = paymentService.createPaymentLink(result);
-
-        return ResponseEntity.created(URI.create("")).body(
-                HTTPResponse
-                        .builder()
-                        .message("Order created successfully")
-                        .developerMessage(paymentLink)
-                        .data(Map.of("orderDTO", result))
-                        .status(HttpStatus.CREATED)
-                        .timestamp(LocalDateTime.now().toString())
-                        .statusCode(HttpStatus.CREATED.value())
-                        .build()
-        );
-    }
-
     @PostMapping("/user-id={user_id}")
     public ResponseEntity<HTTPResponse> placeOrderByUserBasket(@PathVariable("user_id") Long userId, Authentication connectedUser) {
         OrderDTO result = orderService.placeOrderByUserBasket(userId, connectedUser);
@@ -121,7 +104,7 @@ public class OrderController {
 
     @PostMapping("/pay-pending-order/id={orderId}")
     public ResponseEntity<HTTPResponse> payPendingOrder(@PathVariable("orderId") UUID orderId, Authentication connectedUser) {
-        OrderDTO result = orderService.findById(orderId, connectedUser);
+        OrderDTO result = orderService.findPendingOrderById(orderId, connectedUser);
         String paymentLink = paymentService.createPaymentLink(result);
 
         return ResponseEntity.ok(
@@ -134,7 +117,7 @@ public class OrderController {
 
     @PatchMapping("/set-paid/id={id}")
     public ResponseEntity<HTTPResponse> setOrderAsPaid(@PathVariable("id") UUID orderId, Authentication connectedUser) {
-        OrderDTO result = orderService.setOrderAsPaid(orderId, connectedUser);
+        OrderDTO result = orderService.setOrderAsPaidIfNotPaid(orderId, connectedUser);
 
         return ResponseEntity.ok(
                 HTTPResponse
@@ -148,9 +131,9 @@ public class OrderController {
         );
     }
 
-    @PatchMapping("/id={id}")
-    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") UUID orderId, @RequestBody Order updatedOrder) {
-        OrderDTO result = orderService.updateById(orderId, updatedOrder);
+    @PatchMapping("/admin/id={id}")
+    public ResponseEntity<HTTPResponse> updateByIdAdminRequest(@PathVariable("id") UUID orderId, @RequestBody OrderUpdateAdminRequest request) {
+        OrderDTO result = orderService.updateById(orderId, request);
 
         return ResponseEntity.ok(
                 HTTPResponse

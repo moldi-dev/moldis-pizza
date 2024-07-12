@@ -2,6 +2,9 @@ package org.moldidev.moldispizza.service;
 
 import org.moldidev.moldispizza.dto.UserDTO;
 import org.moldidev.moldispizza.entity.User;
+import org.moldidev.moldispizza.request.admin.UserCreateAdminRequest;
+import org.moldidev.moldispizza.request.admin.UserDetailsUpdateAdminRequest;
+import org.moldidev.moldispizza.request.customer.*;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -13,9 +16,10 @@ import java.util.Map;
 @Service
 @Transactional
 public interface UserService {
-    UserDTO save(User user);
+    UserDTO save(UserCreateAdminRequest request);
+    UserDTO save(UserSignUpRequest request);
 
-    Map<String, String> signIn(Map<String, Object> credentials);
+    Map<String, String> signIn(UserSignInRequest request);
     User authenticate(String username, String password);
 
     UserDTO findById(Long userId);
@@ -26,14 +30,17 @@ public interface UserService {
 
     ResponseEntity<String> verifyByVerificationToken(String email, String verificationToken);
     void resendConfirmationEmail(String email);
-    void sendResetPasswordEmail(String email);
-    UserDTO resetPasswordThroughToken(String token, String newPassword);
-    UserDTO changePasswordById(Long userId, String currentPassword, String newPassword, Authentication connectedUser);
+    void sendResetPasswordEmail(UserResetPasswordEmailRequest request);
+    UserDTO resetPasswordThroughToken(UserResetPasswordCodeRequest request);
+    UserDTO changePasswordById(Long userId, UserChangePasswordRequest request, Authentication connectedUser);
 
     UserDTO setUserImage(Long userId, Long imageId, Authentication connectedUser);
     UserDTO removeUserImage(Long userId, Authentication connectedUser);
 
-    UserDTO updateById(Long userId, User updatedUser, Authentication connectedUser);
+    UserDTO updateById(Long userId, UserDetailsUpdateRequest request, Authentication connectedUser);
+    UserDTO updateById(Long userId, UserDetailsUpdateAdminRequest request);
 
     void deleteById(Long userId);
+
+    Boolean checkIfUserIsAdmin(Long userId);
 }

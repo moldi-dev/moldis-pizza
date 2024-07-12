@@ -2,7 +2,12 @@ package org.moldidev.moldispizza.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.UserDTO;
-import org.moldidev.moldispizza.entity.User;
+import org.moldidev.moldispizza.request.admin.UserCreateAdminRequest;
+import org.moldidev.moldispizza.request.admin.UserDetailsUpdateAdminRequest;
+import org.moldidev.moldispizza.request.customer.UserChangePasswordRequest;
+import org.moldidev.moldispizza.request.customer.UserDetailsUpdateRequest;
+import org.moldidev.moldispizza.request.customer.UserResetPasswordCodeRequest;
+import org.moldidev.moldispizza.request.customer.UserResetPasswordEmailRequest;
 import org.moldidev.moldispizza.response.HTTPResponse;
 import org.moldidev.moldispizza.service.UserService;
 import org.springframework.data.domain.Page;
@@ -98,14 +103,14 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<HTTPResponse> save(@RequestBody User user) {
-        UserDTO result = userService.save(user);
+    public ResponseEntity<HTTPResponse> save(@RequestBody UserCreateAdminRequest request) {
+        UserDTO result = userService.save(request);
 
         return ResponseEntity.ok(
                 HTTPResponse
                         .builder()
                         .data(Map.of("userDTO", result))
-                        .message("Account successfully created. Follow the steps sent on the email in order to activate it")
+                        .message("User successfully created.")
                         .status(HttpStatus.OK)
                         .timestamp(LocalDateTime.now().toString())
                         .statusCode(HttpStatus.OK.value())
@@ -116,6 +121,21 @@ public class UserController {
     @GetMapping("/verify")
     public ResponseEntity<String> verifyByVerificationToken(@RequestParam("email") String email, @RequestParam("token") String token) {
         return userService.verifyByVerificationToken(email, token);
+    }
+
+    @GetMapping("/admin/id={userId}")
+    public ResponseEntity<HTTPResponse> checkIfUserIsAdmin(@PathVariable("userId") Long userId) {
+        Boolean result = userService.checkIfUserIsAdmin(userId);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("answer", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
     }
 
     @PostMapping("/resend-confirmation-email/email={email}")
@@ -133,9 +153,9 @@ public class UserController {
         );
     }
 
-    @PostMapping("/send-reset-password-token/email={email}")
-    public ResponseEntity<HTTPResponse> sendResetPasswordToken(@PathVariable("email") String email) {
-        userService.sendResetPasswordEmail(email);
+    @PostMapping("/send-reset-password-token")
+    public ResponseEntity<HTTPResponse> sendResetPasswordToken(@RequestBody UserResetPasswordEmailRequest request) {
+        userService.sendResetPasswordEmail(request);
 
         return ResponseEntity.ok(
                 HTTPResponse
@@ -148,9 +168,9 @@ public class UserController {
         );
     }
 
-    @PostMapping("/reset-password/reset-password-token={token}")
-    public ResponseEntity<HTTPResponse> resetPasswordThroughToken(@PathVariable("token") String token, @RequestBody String newPassword) {
-        UserDTO result = userService.resetPasswordThroughToken(token, newPassword);
+    @PostMapping("/reset-password")
+    public ResponseEntity<HTTPResponse> resetPasswordThroughToken(@RequestBody UserResetPasswordCodeRequest request) {
+        UserDTO result = userService.resetPasswordThroughToken(request);
 
         return ResponseEntity.ok(
                 HTTPResponse
@@ -165,8 +185,8 @@ public class UserController {
     }
 
     @PostMapping("/change-password/id={id}")
-    public ResponseEntity<HTTPResponse> changePasswordById(@PathVariable("id") Long userId, @RequestBody Map<String, String> passwordMap, Authentication connectedUser) {
-        UserDTO result = userService.changePasswordById(userId, passwordMap.get("currentPassword"), passwordMap.get("newPassword"), connectedUser);
+    public ResponseEntity<HTTPResponse> changePasswordById(@PathVariable("id") Long userId, @RequestBody UserChangePasswordRequest request, Authentication connectedUser) {
+        UserDTO result = userService.changePasswordById(userId, request, connectedUser);
 
         return ResponseEntity.ok(
                 HTTPResponse
@@ -181,8 +201,24 @@ public class UserController {
     }
 
     @PatchMapping("/id={id}")
-    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long userId, @RequestBody User updatedUser, Authentication connectedUser) {
-        UserDTO result = userService.updateById(userId, updatedUser, connectedUser);
+    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long userId, @RequestBody UserDetailsUpdateRequest request, Authentication connectedUser) {
+        UserDTO result = userService.updateById(userId, request, connectedUser);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("userDTO", result))
+                        .message("User updated successfully")
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
+    }
+
+    @PatchMapping("/admin/id={id}")
+    public ResponseEntity<HTTPResponse> updateByIdAdminRequest(@PathVariable("id") Long userId, @RequestBody UserDetailsUpdateAdminRequest request) {
+        UserDTO result = userService.updateById(userId, request);
 
         return ResponseEntity.ok(
                 HTTPResponse

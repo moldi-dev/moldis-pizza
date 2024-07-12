@@ -21,8 +21,6 @@ public interface ImageService {
     Page<ImageDTO> findAllByType(String type, int page, int size);
     List<ImageDTO> findAllByPizzaId(Long pizzaId);
 
-    ImageDTO updateById(Long imageId, MultipartFile image);
-
     void delete(Image image);
     void deleteById(Long imageId);
 }

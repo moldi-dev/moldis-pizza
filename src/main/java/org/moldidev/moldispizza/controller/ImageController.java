@@ -127,22 +127,6 @@ public class ImageController {
         );
     }
 
-    @PatchMapping("/id={id}")
-    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long imageId, @RequestBody MultipartFile updatedImage) {
-        ImageDTO result = imageService.updateById(imageId, updatedImage);
-
-        return ResponseEntity.ok(
-                HTTPResponse
-                        .builder()
-                        .message("Image updated successfully")
-                        .data(Map.of("imageDTO", result))
-                        .status(HttpStatus.OK)
-                        .timestamp(LocalDateTime.now().toString())
-                        .statusCode(HttpStatus.OK.value())
-                        .build()
-        );
-    }
-
     @DeleteMapping("/id={id}")
     public ResponseEntity<HTTPResponse> deleteById(@PathVariable("id") Long imageId) {
         imageService.deleteById(imageId);

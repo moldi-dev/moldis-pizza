@@ -5,6 +5,7 @@ import org.moldidev.moldispizza.dto.ReviewDTO;
 import org.moldidev.moldispizza.entity.Pizza;
 import org.moldidev.moldispizza.entity.Review;
 import org.moldidev.moldispizza.entity.User;
+import org.moldidev.moldispizza.enumeration.OrderStatus;
 import org.moldidev.moldispizza.exception.ObjectNotValidException;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
 import org.moldidev.moldispizza.exception.ResourceNotFoundException;
@@ -13,6 +14,8 @@ import org.moldidev.moldispizza.repository.OrderRepository;
 import org.moldidev.moldispizza.repository.PizzaRepository;
 import org.moldidev.moldispizza.repository.ReviewRepository;
 import org.moldidev.moldispizza.repository.UserRepository;
+import org.moldidev.moldispizza.request.admin.ReviewUpdateAdminRequest;
+import org.moldidev.moldispizza.request.customer.UserCreateReviewRequest;
 import org.moldidev.moldispizza.service.ReviewService;
 import org.moldidev.moldispizza.service.SecurityService;
 import org.moldidev.moldispizza.validation.ObjectValidator;
@@ -31,31 +34,13 @@ public class ReviewServiceImplementation implements ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final ReviewDTOMapper reviewDTOMapper;
-    private final ObjectValidator<Review> objectValidator;
     private final SecurityService securityService;
     private final UserRepository userRepository;
     private final PizzaRepository pizzaRepository;
     private final OrderRepository orderRepository;
 
-    @Override
-    public ReviewDTO save(Review review) {
-        objectValidator.validate(review);
-
-        boolean hasUserAlreadyReviewedThePizza = reviewRepository
-                .existsReviewByUserUserIdAndPizzaPizzaId(review.getUser().getUserId(), review.getPizza().getPizzaId());
-
-        boolean hasUserBoughtThePizza = orderRepository.existsByUserUserIdAndPizzasPizzaId(review.getUser().getUserId(), review.getPizza().getPizzaId());
-
-        if (!hasUserBoughtThePizza) {
-            throw new ResourceNotFoundException("This user did not buy the pizza yet");
-        }
-
-        if (hasUserAlreadyReviewedThePizza) {
-            throw new ResourceAlreadyExistsException("This user already reviewed this pizza");
-        }
-
-        return reviewDTOMapper.apply(reviewRepository.save(review));
-    }
+    private final ObjectValidator<UserCreateReviewRequest> userCreateRequestValidator;
+    private final ObjectValidator<ReviewUpdateAdminRequest> reviewUpdateAdminRequestValidator;
 
     @Override
     public ReviewDTO findById(Long reviewId) {
@@ -106,9 +91,10 @@ public class ReviewServiceImplementation implements ReviewService {
     }
 
     @Override
-    public ReviewDTO postReviewByUserIdAndPizzaId(Long userId, Long pizzaId, Integer rating, String comment, Authentication connectedUser) {
+    public ReviewDTO postReviewByUserIdAndPizzaId(Long userId, Long pizzaId, UserCreateReviewRequest request, Authentication connectedUser) {
         securityService.validateAuthenticatedUser(connectedUser, userId);
-        HashSet<String> validationErrors = new HashSet<>();
+
+        userCreateRequestValidator.validate(request);
 
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
@@ -119,7 +105,7 @@ public class ReviewServiceImplementation implements ReviewService {
         boolean hasUserAlreadyReviewedThePizza = reviewRepository
                 .existsReviewByUserUserIdAndPizzaPizzaId(userId, pizzaId);
 
-        boolean hasUserBoughtThePizza = orderRepository.existsByUserUserIdAndPizzasPizzaId(userId, pizzaId);
+        boolean hasUserBoughtThePizza = orderRepository.existsByUserUserIdAndPizzasPizzaIdAndStatus(userId, pizzaId, OrderStatus.DELIVERED);
 
         if (!hasUserBoughtThePizza) {
             throw new ResourceNotFoundException("This user did not buy the pizza yet");
@@ -129,34 +115,25 @@ public class ReviewServiceImplementation implements ReviewService {
             throw new ResourceAlreadyExistsException("This user already reviewed this pizza");
         }
 
-        if (rating < 1 || rating > 5) {
-            validationErrors.add("The rating must be at least 1 and at most 5 stars");
-            throw new ObjectNotValidException(validationErrors);
-        }
-
         Review review = new Review();
 
         review.setPizza(foundPizza);
         review.setUser(foundUser);
-        review.setRating(rating);
-        review.setComment(comment);
+        review.setRating(request.rating());
+        review.setComment(request.comment());
 
         return reviewDTOMapper.apply(reviewRepository.save(review));
     }
 
     @Override
-    public ReviewDTO updateById(Long reviewId, Review updatedReview, Authentication connectedUser) {
+    public ReviewDTO updateById(Long reviewId, ReviewUpdateAdminRequest request) {
         Review foundReview = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ResourceNotFoundException("The review by the provided id doesn't exist"));
 
-        securityService.validateAuthenticatedUser(connectedUser, foundReview.getUser().getUserId());
+        reviewUpdateAdminRequestValidator.validate(request);
 
-        objectValidator.validate(updatedReview);
-
-        foundReview.setPizza(updatedReview.getPizza());
-        foundReview.setUser(updatedReview.getUser());
-        foundReview.setRating(updatedReview.getRating());
-        foundReview.setComment(updatedReview.getComment());
+        foundReview.setRating(request.rating());
+        foundReview.setComment(request.comment());
 
         return reviewDTOMapper.apply(reviewRepository.save(foundReview));
     }
@@ -169,5 +146,10 @@ public class ReviewServiceImplementation implements ReviewService {
         securityService.validateAuthenticatedUser(connectedUser, foundReview.getUser().getUserId());
 
         reviewRepository.delete(foundReview);
+    }
+
+    @Override
+    public void delete(Review review) {
+        reviewRepository.delete(review);
     }
 }

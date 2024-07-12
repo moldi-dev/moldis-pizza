@@ -159,55 +159,7 @@ public class ImageServiceImplementation implements ImageService {
     }
 
     @Override
-    public ImageDTO updateById(Long imageId, MultipartFile updatedImage) {
-        Image foundImage = imageRepository.findById(imageId)
-                .orElseThrow(() -> new ResourceNotFoundException("The image by the provided id doesn't exist"));
-
-        HashSet<String> violations = new HashSet<>();
-
-        if (updatedImage.getSize() > 1024 * 1024 * 5) {
-            violations.add("The image size must not exceed 5MB");
-            throw new ObjectNotValidException(violations);
-        }
-
-        try {
-            String filename = LocalDateTime.now() + " " + updatedImage.getOriginalFilename();
-            String saveDirectory = "src/main/resources/images/";
-            Path savePath = Paths.get(saveDirectory + filename);
-
-            Files.createDirectories(savePath.getParent());
-
-            Path oldImagePath = Paths.get(foundImage.getUrl());
-            Files.deleteIfExists(oldImagePath);
-
-            Files.copy(updatedImage.getInputStream(), savePath, StandardCopyOption.REPLACE_EXISTING);
-
-            foundImage.setUrl(savePath.toString());
-            foundImage.setType(updatedImage.getContentType());
-
-            return imageDTOMapper.apply(imageRepository.save(foundImage));
-        }
-
-        catch (IOException e) {
-            throw new RuntimeException("Image could not be updated: " + e.getMessage());
-        }
-    }
-
-    @Override
     public void delete(Image image) {
-        Optional<User> userWithImage = userRepository.findByImageUrl(image.getUrl());
-        Optional<Pizza> pizzaWithImage = pizzaRepository.findByImageUrl(image.getUrl());
-
-        if (userWithImage.isPresent()) {
-            userWithImage.get().setImage(null);
-            userRepository.save(userWithImage.get());
-        }
-
-        if (pizzaWithImage.isPresent()) {
-            pizzaWithImage.get().getImages().remove(image);
-            pizzaRepository.save(pizzaWithImage.get());
-        }
-
         Path path = Paths.get(image.getUrl());
 
         try {

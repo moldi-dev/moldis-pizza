@@ -3,6 +3,8 @@ package org.moldidev.moldispizza.controller;
 import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.ReviewDTO;
 import org.moldidev.moldispizza.entity.Review;
+import org.moldidev.moldispizza.request.admin.ReviewUpdateAdminRequest;
+import org.moldidev.moldispizza.request.customer.UserCreateReviewRequest;
 import org.moldidev.moldispizza.response.HTTPResponse;
 import org.moldidev.moldispizza.service.ReviewService;
 import org.springframework.data.domain.Page;
@@ -95,25 +97,9 @@ public class ReviewController {
         );
     }
 
-    @PostMapping
-    public ResponseEntity<HTTPResponse> save(@RequestBody Review review) {
-        ReviewDTO result = reviewService.save(review);
-
-        return ResponseEntity.created(URI.create("")).body(
-                HTTPResponse
-                        .builder()
-                        .message("Review created successfully")
-                        .data(Map.of("reviewsDTOs", result))
-                        .status(HttpStatus.CREATED)
-                        .timestamp(LocalDateTime.now().toString())
-                        .statusCode(HttpStatus.CREATED.value())
-                        .build()
-        );
-    }
-
     @PostMapping("/user-id={userId}/pizza-id={pizzaId}")
-    public ResponseEntity<HTTPResponse> postReviewByUserIdAndPizzaId(@PathVariable Long userId, @PathVariable Long pizzaId, @RequestBody Map<String, String> content, Authentication connectedUser) {
-        ReviewDTO result = reviewService.postReviewByUserIdAndPizzaId(userId, pizzaId, Integer.parseInt(content.get("rating")), content.get("comment"), connectedUser);
+    public ResponseEntity<HTTPResponse> postReviewByUserIdAndPizzaId(@PathVariable Long userId, @PathVariable Long pizzaId, @RequestBody UserCreateReviewRequest request, Authentication connectedUser) {
+        ReviewDTO result = reviewService.postReviewByUserIdAndPizzaId(userId, pizzaId, request, connectedUser);
 
         return ResponseEntity.created(URI.create("")).body(
                 HTTPResponse
@@ -127,9 +113,9 @@ public class ReviewController {
         );
     }
 
-    @PatchMapping("/id={id}")
-    public ResponseEntity<HTTPResponse> updateById(@PathVariable("id") Long reviewId, @RequestBody Review updatedReview, Authentication connectedUser) {
-        ReviewDTO result = reviewService.updateById(reviewId, updatedReview, connectedUser);
+    @PatchMapping("/admin/id={id}")
+    public ResponseEntity<HTTPResponse> updateByIdAdminRequest(@PathVariable("id") Long reviewId, @RequestBody ReviewUpdateAdminRequest request) {
+        ReviewDTO result = reviewService.updateById(reviewId, request);
 
         return ResponseEntity.ok(
                 HTTPResponse

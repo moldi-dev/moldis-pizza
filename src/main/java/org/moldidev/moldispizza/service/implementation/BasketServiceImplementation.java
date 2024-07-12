@@ -26,16 +26,9 @@ public class BasketServiceImplementation implements BasketService {
 
     private final BasketRepository basketRepository;
     private final BasketDTOMapper basketDTOMapper;
-    private final ObjectValidator<Basket> objectValidator;
     private final PizzaRepository pizzaRepository;
     private final SecurityService securityService;
     private final UserRepository userRepository;
-
-    @Override
-    public BasketDTO save(Basket basket) {
-        objectValidator.validate(basket);
-        return basketDTOMapper.apply(basketRepository.save(basket));
-    }
 
     @Override
     public BasketDTO findById(Long basketId) {
@@ -67,20 +60,6 @@ public class BasketServiceImplementation implements BasketService {
         }
 
         return baskets.map(basketDTOMapper);
-    }
-
-    @Override
-    public BasketDTO updateById(Long basketId, Basket updatedBasket) {
-        Basket foundBasket = basketRepository.findById(basketId)
-                .orElseThrow(() -> new ResourceNotFoundException("The basket by the provided id doesn't exist"));
-
-        objectValidator.validate(updatedBasket);
-
-        foundBasket.setPizzas(updatedBasket.getPizzas());
-        foundBasket.setUser(updatedBasket.getUser());
-        foundBasket.setTotalPrice(updatedBasket.getTotalPrice());
-
-        return basketDTOMapper.apply(basketRepository.save(foundBasket));
     }
 
     @Override
@@ -123,13 +102,5 @@ public class BasketServiceImplementation implements BasketService {
         }
 
         throw new ResourceNotFoundException("The provided user doesn't have the pizza to be removed in his basket");
-    }
-
-    @Override
-    public void deleteById(Long basketId) {
-        Basket foundBasket = basketRepository.findById(basketId)
-                .orElseThrow(() -> new ResourceNotFoundException("The basket by the provided id doesn't exist"));
-
-        basketRepository.delete(foundBasket);
     }
 }
