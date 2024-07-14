@@ -16,6 +16,9 @@ public class PaymentService {
     @Value("${stripe.api.key}")
     private String stripeSecretKey;
 
+    @Value("${frontend.url}")
+    private String frontendUrl;
+
     public String createPaymentLink(OrderDTO order) {
         Stripe.apiKey = stripeSecretKey;
 
@@ -42,8 +45,8 @@ public class PaymentService {
             SessionCreateParams.Builder paramsBuilder = SessionCreateParams.builder()
                     .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
                     .setMode(SessionCreateParams.Mode.PAYMENT)
-                    .setSuccessUrl("http://localhost:3000/payment-success?id=" + order.orderId())
-                    .setCancelUrl("http://localhost:3000/payment-cancel");
+                    .setSuccessUrl(frontendUrl + "/payment-success?id=" + order.orderId())
+                    .setCancelUrl(frontendUrl + "/payment-cancel");
 
             for (SessionCreateParams.LineItem lineItem : lineItems) {
                 paramsBuilder.addLineItem(lineItem);

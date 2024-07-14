@@ -1,7 +1,9 @@
 package org.moldidev.moldispizza.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.UserDTO;
+import org.moldidev.moldispizza.enumeration.Provider;
 import org.moldidev.moldispizza.request.admin.UserCreateAdminRequest;
 import org.moldidev.moldispizza.request.admin.UserDetailsUpdateAdminRequest;
 import org.moldidev.moldispizza.request.customer.*;
@@ -17,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
@@ -99,6 +102,36 @@ public class UserController {
         );
     }
 
+    @GetMapping("/enabled/id={id}")
+    public ResponseEntity<HTTPResponse> checkIfUserIsEnabled(@PathVariable("id") Long userId, Authentication connectedUser) {
+        Boolean result = userService.checkIfUserIsEnabled(userId, connectedUser);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .data(Map.of("answer", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
+    }
+
+    @GetMapping("/provider/id={id}")
+    public ResponseEntity<HTTPResponse> getUserProvider(@PathVariable("id") Long userId, Authentication connectedUser) {
+        Provider provider = userService.findUserProvider(userId, connectedUser);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message(provider.toString())
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
+    }
+
     @PostMapping
     public ResponseEntity<HTTPResponse> save(@RequestBody UserCreateAdminRequest request) {
         UserDTO result = userService.save(request);
@@ -124,6 +157,22 @@ public class UserController {
                         .builder()
                         .message("Your account has been successfully activated. You may now sign in")
                         .data(Map.of("userDTO", result))
+                        .status(HttpStatus.OK)
+                        .timestamp(LocalDateTime.now().toString())
+                        .statusCode(HttpStatus.OK.value())
+                        .build()
+        );
+    }
+
+    @PatchMapping("/complete-registration-oauth2-user/id={id}")
+    public ResponseEntity<HTTPResponse> completeRegistrationForOAuth2User(@PathVariable("id") Long userId, @RequestBody CompleteRegistrationOAuth2UserRequest request, Authentication connectedUser) {
+        Map<String, String> tokens = userService.completeRegistrationForOAuth2User(userId, request, connectedUser);
+
+        return ResponseEntity.ok(
+                HTTPResponse
+                        .builder()
+                        .message("Your account has been successfully set up. Welcome " + request.username())
+                        .data(tokens)
                         .status(HttpStatus.OK)
                         .timestamp(LocalDateTime.now().toString())
                         .statusCode(HttpStatus.OK.value())

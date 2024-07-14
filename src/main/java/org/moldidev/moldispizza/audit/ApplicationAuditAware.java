@@ -1,6 +1,7 @@
 package org.moldidev.moldispizza.audit;
 
 import org.moldidev.moldispizza.entity.User;
+import org.moldidev.moldispizza.oauth2.CustomOAuth2User;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17,8 +18,16 @@ public class ApplicationAuditAware implements AuditorAware<String> {
             return Optional.empty();
         }
 
-        User userPrincipal = (User) authentication.getPrincipal();
+        Object principal = authentication.getPrincipal();
 
-        return Optional.ofNullable(userPrincipal.getUsername());
+        if (principal instanceof CustomOAuth2User customOAuth2User) {
+            return Optional.of(customOAuth2User.getUser().getUsername());
+        }
+
+        else if (principal instanceof User user) {
+            return Optional.of(user.getUsername());
+        }
+
+        return Optional.empty();
     }
 }

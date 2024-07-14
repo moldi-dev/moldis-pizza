@@ -1,5 +1,6 @@
 package org.moldidev.moldispizza.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.ReviewDTO;
 import org.moldidev.moldispizza.request.admin.ReviewUpdateAdminRequest;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/v1/reviews")
 @RequiredArgsConstructor

@@ -2,6 +2,7 @@ package org.moldidev.moldispizza.service;
 
 import org.moldidev.moldispizza.dto.UserDTO;
 import org.moldidev.moldispizza.entity.User;
+import org.moldidev.moldispizza.enumeration.Provider;
 import org.moldidev.moldispizza.request.admin.UserCreateAdminRequest;
 import org.moldidev.moldispizza.request.admin.UserDetailsUpdateAdminRequest;
 import org.moldidev.moldispizza.request.customer.*;
@@ -38,8 +39,13 @@ public interface UserService {
 
     UserDTO updateById(Long userId, UserDetailsUpdateRequest request, Authentication connectedUser);
     UserDTO updateById(Long userId, UserDetailsUpdateAdminRequest request);
+    Map<String, String> completeRegistrationForOAuth2User(Long userId, CompleteRegistrationOAuth2UserRequest request, Authentication connectedUser);
 
     void deleteById(Long userId);
 
     Boolean checkIfUserIsAdmin(Long userId);
+
+    Boolean checkIfUserIsEnabled(Long userId, Authentication connectedUser);
+
+    Provider findUserProvider(Long userId, Authentication connectedUser);
 }

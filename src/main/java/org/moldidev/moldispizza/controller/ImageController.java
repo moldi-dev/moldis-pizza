@@ -1,5 +1,6 @@
 package org.moldidev.moldispizza.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.ImageDTO;
 import org.moldidev.moldispizza.response.HTTPResponse;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/v1/images")
 @RequiredArgsConstructor

@@ -1,5 +1,6 @@
 package org.moldidev.moldispizza.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.OrderDTO;
 import org.moldidev.moldispizza.request.admin.OrderUpdateAdminRequest;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/v1/orders")
 @RequiredArgsConstructor

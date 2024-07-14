@@ -3,6 +3,7 @@ package org.moldidev.moldispizza.service.implementation;
 import lombok.RequiredArgsConstructor;
 import org.moldidev.moldispizza.dto.UserDTO;
 import org.moldidev.moldispizza.entity.*;
+import org.moldidev.moldispizza.enumeration.Provider;
 import org.moldidev.moldispizza.enumeration.Role;
 import org.moldidev.moldispizza.exception.ObjectNotValidException;
 import org.moldidev.moldispizza.exception.ResourceAlreadyExistsException;
@@ -53,6 +54,7 @@ public class UserServiceImplementation implements UserService {
     private final ObjectValidator<UserCreateAdminRequest> userCreateAdminRequestValidator;
     private final ObjectValidator<UserDetailsUpdateAdminRequest> userDetailsUpdateAdminRequestValidator;
     private final ObjectValidator<UserActivateAccountRequest> userActivateAccountRequestValidator;
+    private final ObjectValidator<CompleteRegistrationOAuth2UserRequest> completeRegistrationOAuth2UserRequestValidator;
 
     @Override
     public UserDTO save(UserCreateAdminRequest request) {
@@ -82,6 +84,7 @@ public class UserServiceImplementation implements UserService {
         user.setAddress(request.address());
         user.setIsEnabled(true);
         user.setIsLocked(false);
+        user.setProvider(Provider.LOCAL);
         user.setRole(Role.CUSTOMER);
 
         User savedUser = userRepository.save(user);
@@ -128,6 +131,7 @@ public class UserServiceImplementation implements UserService {
         user.setAddress(request.address());
         user.setPassword(encoder.encode(request.password()));
         user.setRole(Role.CUSTOMER);
+        user.setProvider(Provider.LOCAL);
         user.setIsLocked(false);
         user.setIsEnabled(false);
 
@@ -181,6 +185,10 @@ public class UserServiceImplementation implements UserService {
     public User authenticate(String username, String password) {
         User foundUser = userRepository.findByUsernameIgnoreCase(username)
                         .orElseThrow(() -> new ResourceNotFoundException("Invalid credentials provided"));
+
+        if (!foundUser.getProvider().equals(Provider.LOCAL)) {
+            throw new ResourceNotFoundException("Invalid credentials provided");
+        }
 
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 
@@ -239,8 +247,8 @@ public class UserServiceImplementation implements UserService {
         User foundUser = userRepository.findByVerificationToken(request.verificationCode())
                 .orElseThrow(() -> new ResourceNotFoundException("The user by the provided verification code doesn't exist"));
 
-        if (foundUser.getIsEnabled()) {
-            throw new ResourceAlreadyExistsException("The user already verified");
+        if (foundUser.getIsEnabled() || !foundUser.getProvider().equals(Provider.LOCAL)) {
+            throw new ResourceAlreadyExistsException("The user is already verified");
         }
 
         if (foundUser.getVerificationToken().equals(request.verificationCode())) {
@@ -258,7 +266,7 @@ public class UserServiceImplementation implements UserService {
         User foundUser = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResourceNotFoundException("The user by the provided email doesn't exist"));
 
-        if (foundUser.getIsEnabled()) {
+        if (foundUser.getIsEnabled() || !foundUser.getProvider().equals(Provider.LOCAL)) {
             throw new ResourceAlreadyExistsException("This user is already verified");
         }
 
@@ -403,6 +411,47 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
+    public Map<String, String> completeRegistrationForOAuth2User(Long userId, CompleteRegistrationOAuth2UserRequest request, Authentication connectedUser) {
+        securityService.validateAuthenticatedUser(connectedUser, userId);
+
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
+
+        HashSet<String> validationErrors = new HashSet<>();
+
+        completeRegistrationOAuth2UserRequestValidator.validate(request);
+
+        if (!request.password().matches(request.confirmPassword())) {
+            validationErrors.add("The passwords do not match");
+            throw new ObjectNotValidException(validationErrors);
+        }
+
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
+        foundUser.setFirstName(request.firstName());
+        foundUser.setLastName(request.lastName());
+        foundUser.setEmail(request.email());
+        foundUser.setAddress(request.address());
+        foundUser.setPassword(encoder.encode(request.password()));
+
+        foundUser.setIsEnabled(true);
+
+        userRepository.save(foundUser);
+
+        String accessToken = jwtService.generateToken(foundUser, 1000L * 60 * 60); // 60 minutes = one hour
+        String refreshToken = jwtService.generateToken(foundUser, 1000L * 60 * 60 * 24); // 24 hours = one day
+        String rememberMeToken = jwtService.generateToken(foundUser, 1000L * 60 * 60 * 24 * 30); // 30 days = one month;
+
+        Map<String, String> tokens = new HashMap<>();
+
+        tokens.put("accessToken", accessToken);
+        tokens.put("refreshToken", refreshToken);
+        tokens.put("rememberMeToken", rememberMeToken);
+
+        return tokens;
+    }
+
+    @Override
     public void deleteById(Long userId) {
         User foundUser = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
@@ -432,6 +481,26 @@ public class UserServiceImplementation implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
 
         return foundUser.getRole().equals(Role.ADMINISTRATOR);
+    }
+
+    @Override
+    public Boolean checkIfUserIsEnabled(Long userId, Authentication connectedUser) {
+        securityService.validateAuthenticatedUser(connectedUser, userId);
+
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
+
+        return foundUser.getIsEnabled();
+    }
+
+    @Override
+    public Provider findUserProvider(Long userId, Authentication connectedUser) {
+        securityService.validateAuthenticatedUser(connectedUser, userId);
+
+        User foundUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("The user by the provided id doesn't exist"));
+
+        return foundUser.getProvider();
     }
 
     private String generateVerificationToken(User user) {

@@ -1,6 +1,10 @@
 package org.moldidev.moldispizza.security;
 
 import lombok.RequiredArgsConstructor;
+import org.moldidev.moldispizza.oauth2.OAuth2SignInFailureHandler;
+import org.moldidev.moldispizza.oauth2.OAuth2SignInSuccessHandler;
+import org.moldidev.moldispizza.service.OAuth2Service;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -27,6 +31,12 @@ public class SecurityConfiguration {
     private final AuthenticationProvider authenticationProvider;
     private final JWTAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final OAuth2SignInSuccessHandler oAuth2SignInSuccessHandler;
+    private final OAuth2SignInFailureHandler oAuth2SignInFailureHandler;
+    private final OAuth2Service oAuth2Service;
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -34,10 +44,28 @@ public class SecurityConfiguration {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, "/api/v1/authentication/**").permitAll()
 
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/users/verify").permitAll()
+                        .requestMatchers(
+                                "/v2/api-docs",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/swagger-resources",
+                                "/swagger-resources/**",
+                                "/configuration/ui",
+                                "/configuration/security",
+                                "/swagger-ui/**",
+                                "/webjars/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/api/v1/authentication/**").permitAll()
+                        .requestMatchers("/oauth2/authorization/**").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/enabled/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/username=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/provider/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/users/complete-registration-oauth2-user/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/users/verify").permitAll()
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/users/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/users/remove-image/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/users/set-image/id=**/image-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
@@ -51,8 +79,8 @@ public class SecurityConfiguration {
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/reviews/exists/user-id=**/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.GET, "/api/v1/reviews/pizza-id=**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/reviews/user-id=**/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/reviews/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/reviews/user-id=**/pizza-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/reviews/id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
 
                         .requestMatchers(HttpMethod.GET, "/api/v1/baskets/user-id=**").hasAnyRole("CUSTOMER", "ADMINISTRATOR")
@@ -78,6 +106,13 @@ public class SecurityConfiguration {
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authenticationProvider(authenticationProvider)
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(oAuth2SignInSuccessHandler)
+                        .failureHandler(oAuth2SignInFailureHandler)
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(oAuth2Service)
+                        )
+                )
                 .httpBasic(basic -> basic.authenticationEntryPoint(authenticationEntryPoint));
 
         return http.build();
@@ -87,7 +122,7 @@ public class SecurityConfiguration {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedOrigins(List.of(frontendUrl));
         configuration.setAllowedMethods(List.of("*"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

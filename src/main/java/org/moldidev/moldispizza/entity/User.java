@@ -3,6 +3,7 @@ package org.moldidev.moldispizza.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import org.moldidev.moldispizza.enumeration.Provider;
 import org.moldidev.moldispizza.enumeration.Role;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -80,6 +81,10 @@ public class User extends Auditable implements UserDetails {
 
     @Column(name = "is_enabled")
     private Boolean isEnabled;
+
+    @Column(name = "provider")
+    @Enumerated(EnumType.STRING)
+    private Provider provider;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
